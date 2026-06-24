@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Homepage</title>
+
+<style>
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: #f4f6f9;
+}
+
+/* HEADER */
+header {
+    background: #1f2937;
+    padding: 0 40px;
+}
+
+.logo {
+    color: #fff;
+    font-size: 22px;
+    font-weight: 600;
+    padding: 18px 0;
+    display: inline-block;
+    
+}
+
+/* NAVIGATION */
+nav {
+    float: left;
+}
+
+nav ul {
+    list-style: none;
+}
+
+nav ul li {
+    position: relative;
+    display: inline-block;
+}
+
+nav ul li a {
+    display: block;
+    padding: 20px 18px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 15px;
+    transition: 0.3s;
+}
+
+nav ul li:hover {
+    background: #374151;
+}
+
+nav ul li a:hover {
+    color: #38bdf8;
+}
+
+/* FIRST DROPDOWN */
+nav ul ul {
+    position: absolute;
+    top: 60px;
+    left: 0;
+    background: #ffffff;
+    min-width: 200px;
+    display: none;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    border-radius: 5px;
+}
+
+nav ul ul li {
+    display: block;
+}
+
+nav ul ul li a {
+    padding: 12px 15px;
+    color: #333;
+}
+
+nav ul ul li:hover {
+    background: #f1f5f9;
+}
+
+/* SHOW DROPDOWN */
+nav ul li:hover > ul {
+    display: block;
+}
+
+/* SECOND LEVEL DROPDOWN (Right Side) */
+nav ul ul ul {
+    top: 0;
+    left: 100%;
+}
+
+/* HERO SECTION */
+.hero {
+    text-align: center;
+    padding: 100px 20px;
+    background: linear-gradient(to right, #2563eb, #1e3a8a);
+    color: white;
+}
+
+.hero h1 {
+    font-size: 48px;
+    margin-bottom: 20px;
+}
+
+.hero p {
+    font-size: 18px;
+    margin-bottom: 30px;
+}
+
+.hero button {
+    padding: 12px 25px;
+    font-size: 16px;
+    border: none;
+    background: white;
+    color: #1e3a8a;
+    cursor: pointer;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+
+.hero button:hover {
+    background: #e0e7ff;
+}
+
+/* CLEAR FLOAT */
+header::after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+/* RESPONSIVE */
+@media(max-width: 900px){
+    nav {
+        float: none;
+    }
+
+    nav ul li {
+        display: block;
+    }
+
+    nav ul ul {
+        position: relative;
+        top: 0;
+        box-shadow: none;
+    }
+
+    nav ul ul ul {
+        left: 0;
+    }
+}
+</style>
+
+</head>
+<body>
+
+<header>
+    <div class="logo"></div>
+    <nav>
+        <ul>
+            <li><a href="#">Home</a></li>
+
+            <li>
+                <a href="#">Services ▾</a>
+                <ul>
+                    <li><a href="#">Menu1</a></li>
+                    <li><a href="#">Menu2</a></li>
+                    <li>
+                        <a href="#">Activity ▸</a>
+                        <ul>
+                            <li><a href="#">Lead</a></li>
+                            <li><a href="#">Faults</a></li>
+                            <li><a href="#">Inventory</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="#">OLT ▾</a>
+                <ul>
+                    <li><a href="#">Banerjee Para</a></li>
+                    <li><a href="dlsoltmgmt.html">Dhaleswar</a></li>
+                    <li><a href="gboltmgmt.html">GB</a></li>
+                    <li><a href="kcwoltmgmt.html">Kaman Chowmuhani</a></li>
+                    <li><a href="#">Kunjaban</a></li>
+                    <li><a href="#">ONGC Colony</a></li>
+                    <li><a href="#">Ushabazar</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="#">Report ▾</a>
+                <ul>
+                    <li><a href="combinedlos.html">LoS/Fibre Break</a></li>
+                    <li><a href="combinedlowpower.html">Low ONU Power Level</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Customer ▾</a>
+                <ul>
+                    <li><a href="#">Detail</a></li>
+                    <li><a href="#">Billing</a></li>
+                    <li><a href="#">Performance</a></li>
+                </ul>
+            </li>
+
+            <li>
+                <a href="#" id="username">Username ▾</a>
+                <ul>
+                  
+                    <li id="logout"><a href="#">Logout</a></li>
+                </ul>
+            
+            </li>
+
+        </ul>
+    </nav>
+</header>
+
+<section class="hero">
+    <h1>Alpha Infotech</h1>
+    <p>Delivering high-quality solutions for modern businesses.</p>
+    <!-- <button>Get Started</button> -->
+</section>
+
+
+<script type="module">
+
+     import { app} from "./firebase-config.js";  
+        
+        import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+        import { getAuth, signOut} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+        const auth = getAuth();
+
+            //   const db = getFirestore();
+            //   const currentuser = localStorage.getItem("currentuser");
+     
+
+    let username = sessionStorage.getItem("username");
+    document.getElementById('username').innerText = "👤 "+username + " ▾";
+    document.getElementById('username').style.color = "red";
+    document.getElementById('logout').onclick = function(){
+             signOut(auth).then(() => {
+             
+
+                    window.location.href = "index.html";
+                  }).catch((error) => {
+                  // An error happened.
+                  });
+    }
+
+
+</script>
+
+</body>
+</html>

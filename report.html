@@ -1,0 +1,1413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+</head>
+<style>
+.swal2-popup {
+    width: 600px !important; /* Set the width */
+    font-size: 16px !important; /* Increase font size */
+}
+.highlight { 
+       background-color: #b35e88 !important; 
+       color: white !important; 
+   }
+.priority-normal {
+  background-color: #28a745;
+  color: white;
+}
+
+.priority-high {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.priority-very-high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.priority-critical {
+  background-color: #8B0000;
+  color: white;
+}
+
+
+.leasedline {
+    background-color: rgb(56, 226, 56) !important;
+    color: black !important;
+}
+
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+
+
+    .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.tabs {
+    max-width: 1500px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: #f1f1f1;
+}
+
+.tab-button {
+    /* flex: 1; */
+    width: 200px;
+    padding: 10px 0px;
+    border: none;
+    /* border: 0.25px solid #000; */
+    background-color: inherit;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+    background-color: #ddd;
+}
+
+.tab-button.active {
+    background-color: #ccc;
+}
+
+.tab-content {
+    padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+</style>
+
+<body>
+
+    <div style="top: 40px;" class="sidebar" id="sidebar">
+        <button style="top: 10px;"class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+          
+          <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+          <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+          <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+          <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+          <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+          <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+          <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+          <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+          <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+          <li id="report"><a href="report.html">Report</a></li>
+          <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+          <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+          <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+
+      <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+        <div class="tabs">
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="tab1">PENDING FAULTS</button>
+                <button class="tab-button" data-tab="tab2">CLOSED FAULTS</button>
+                <button class="tab-button" data-tab="tab3">FREQUENT FAULTS</button>
+                <button id= "usertab"class="tab-button" data-tab="tab4" >USERS REPORT</button>
+            </div>
+    
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <div id="tab1" class="tab-pane active">
+                    
+                    <div style="display: flex;justify-content: space-evenly;">
+                        <div>Total Count: <b id="searchcount"></b> </div>
+                        <div class="caption3"><input class="input" id="input1" type="text" placeholder="Search" ></div>
+                        <div><button id="btn_allsection" class="btn btn-default">ALL SECTION</button> </div>
+                        <div><button id="btn_export1" class="btn btn-default">EXPORT TO EXCEL</button> </div>
+                        <div><button id="btn_summary" class="btn btn-default">FAULT SUMMARY</button> </div>
+
+                    <div >
+                    <button id="btn_faultcount" class="btn btn-danger" style="margin-right: 10px;">
+                        CIRCUITS WITH MAXIMUM FAULTS
+                    </button>
+                    </div>
+                     
+                    
+                    </div>
+                    <br>
+                    <div class="container">
+                        <table id="reporttable" class="table table-bordered">
+                            <thead id="thead1">
+                                <th style="text-align: center;">SL</th>
+                                <th style="text-align: center;">DOCKET</th>
+                                <th style="text-align: center;">DATE</th>
+                                <th style="text-align: center;">CUSTOMER</th>
+                                <th style="text-align: center;">ADDRESS</th>
+                                <th style="text-align: center;">PRIORITY</th>
+                                <th style="text-align: center;">PENDING WITH</th>
+                                <th style="text-align: center;">COMMENT</th>
+                                <th style="text-align: center;">DOWNTIME</th>
+                            </thead>
+                            <div class="loader-container" id="loader"></div>
+                            <tbody id="tbody1"></tbody>
+                        </table>
+                    </div>
+    
+                </div>
+                <div id="tab2" class="tab-pane">
+                   
+                   
+                    <div style="display: flex;justify-content: space-evenly;">
+                        <div>Total Count: <b id="searchcount2"></b> </div>
+                        <select id="monthwise">
+                        <option value="1 Month">1 Month</option>
+                        <option value="2 Month">2 Months</option>
+                        <option value="3 Month">3 Months</option>
+                        <option value="6 Month">6 Months</option>
+                        <option value="1 Year">1 Year</option>
+                        </select>
+
+                        <label for="startDate">Start Date:</label>
+                        <!-- <input type="datetime-local" id="startDate"> -->
+                        <input type="date" id="startDate">
+                        <label for="endDate">End Date:</label>
+                        <input type="date" id="endDate">
+                        <div><button id="btn_datesort" class="btn btn-default" >FILTER</button> </div>
+                        <div><button id="btn_clearfilter" class="btn btn-default">CLEAR FILTER</button></div> <!-- New Button -->
+                        <div class="caption3"><input class="input" id="input2" type="text" placeholder="Search" ></div>
+                        <div><button id="btn_export2" class="btn btn-default">EXPORT TO EXCEL</button> </div>
+                        <!-- <div><button id="btn_summary" class="btn btn-default">FAULT SUMMARY</button> </div> -->
+                    </div>
+                    <br>
+                    <div class="container">
+                        <table id="historytable" class="table table-bordered">
+                            <thead id="thead1">
+                                <th style="text-align: center;">SL</th>
+                                <th style="text-align: center;">DOCKET</th>
+                                <th style="text-align: center;">DATE</th>
+                                <th style="text-align: center;">LC ID</th>
+                                <th style="text-align: center;">CUSTOMER</th>
+                                <th style="text-align: center;">ADDRESS</th>
+                                <th style="text-align: center;">CLOSE TIME</th>
+                    
+                                <th style="text-align: center;">FAULT DURATION</th>
+                            </thead>
+                            <div class="loader-container" id="loader2"></div>
+                            <tbody id="tbody2"></tbody>
+                        </table>
+                    </div>
+    
+    
+    
+                </div>
+                <div id="tab3" class="tab-pane">
+                   
+                    <div class="container">
+
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                        <div>Total Count: <b id="searchcount3"></b></div>
+                        <div><input class="input" id="input3" type="text" placeholder="Search"></div>
+                    </div>
+                        <table id="freqfaulttable" class="table table-bordered" style="width: 800px;">
+                            <thead id="thead1">
+                                <th style="text-align: center;">SL</th>
+                                
+                                <th style="text-align: center;">LC ID</th>
+                                <th style="text-align: center;">CUSTOMER</th>
+                                
+                                <th style="text-align: center;">ADDRESS</th>
+                                <th style="text-align: center;">LATEST FAULT CLOSE DATE</th>
+                                
+                            </thead>
+                            <div class="loader-container" id="loader3"></div>
+                            <tbody id="tbody3"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div id="tab4" class="tab-pane">
+
+                    <div class="container">
+
+                         <table class="table table-bordered">
+                        <thead>
+                        <tr>
+                            <th>SL</th>
+                            <th>NAME</th>
+                            <th>EMAIL</th>
+                            <th>PER NO</th>
+                            <th>ROLE</th>
+                            <th>MOBILE APP VERSION</th>
+                            <th>LAST LOGIN DATE</th>
+                            <th>SINCE LAST LOGIN</th>
+                        </tr>
+                        </thead>
+                        <tbody id="user-table-body">
+                        
+                        </tbody>
+                    </table>
+
+
+
+                    </div>
+
+                    
+
+                </div>
+
+            </div>
+        </div>
+
+
+      </div>
+
+    
+    <script src="script.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script type="module" >
+      function getWithExpiry(key) {
+    try {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      
+      const item = JSON.parse(itemStr);
+      console.log("Expiry:", item.expiry);
+      // Check if it's the old format (just a string user ID)
+      if (typeof item === 'string') {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      const now = new Date();
+      
+      if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      return item.value;
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+      localStorage.removeItem(key); // Clear corrupted data
+      return null;
+    }
+  }
+
+  const currentuser = getWithExpiry("currentuser");
+
+  if (!currentuser) {
+    window.location.href = "index.html";
+  } else {
+    // User is authenticated, continue with your page logic
+    console.log("User authenticated:", currentuser);
+    
+  }
+
+
+const btn_faultcount = document.getElementById("btn_faultcount");
+    btn_faultcount.addEventListener("click", () => {
+        window.open("lcfaultcount.html", "_blank");
+    });
+
+document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // Remove 'active' class from all buttons and panes
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+
+            // Add 'active' class to the clicked button and corresponding pane
+            this.classList.add('active');
+            const targetTab = this.getAttribute('data-tab');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+});
+
+        const loaderContainer = document.getElementById("loader");
+        const spinner = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer);
+        loaderContainer.style.display = "flex"; // Show loader initially
+        spinner.stop(); // Stop initially, start when needed
+
+        // Spinner for Tab 2
+        const loaderContainer2 = document.getElementById("loader2");
+        const spinner2 = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer2);
+        loaderContainer2.style.display = "flex"; // Show loader initially
+        spinner2.stop(); // Stop initially, start when needed
+
+        // Spinner for Tab 2
+        const loaderContainer3 = document.getElementById("loader3");
+        const spinner3 = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer3);
+        loaderContainer3.style.display = "flex"; // Show loader initially
+        spinner3.stop(); // Stop initially, start when needed
+
+
+        setInterval(() => {
+            location.reload();
+        }, 300000);
+
+        import { app } from "./firebase-config.js";
+        import { getDatabase, ref, child, onValue, query, orderByChild, startAt, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        //import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+       // import { getFirestore, doc, collection, getDocs, setDoc,serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+        const db = getDatabase();
+
+
+        // ......................code for tab4(user data) ..........................//
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+
+//document.getElementById("usertab").addEventListener("click", 
+async function UserData (){
+
+  try {
+    const dbFirestore = getFirestore();
+    const usersCol = collection(dbFirestore, "users");
+    const userSnapshot = await getDocs(usersCol);
+    const tableBody = document.getElementById("user-table-body");
+
+    let sl = 1;
+
+    const userDataList = userSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        email: data.EMail || "",
+        perNo: data.PerNo || "",
+        section: data.LCRole || "",
+        version: data.VersionName || "",
+        lastLogin: data.LastLogin
+      };
+    });
+
+    // Fetch all employee names in parallel
+    const employeeNamePromises = userDataList.map(user => getEmployeeName(user.perNo));
+    const employeeNames = await Promise.all(employeeNamePromises);
+
+    // Now build the table rows
+    userDataList.forEach((user, index) => {
+      const empname = employeeNames[index];
+
+      let lastLoginStr = "";
+      let sinceLastLoginStr = "";
+
+      if (user.lastLogin) {
+        const lastDate = new Date(user.lastLogin);
+        lastLoginStr = formatDate(lastDate);
+
+        const now = new Date();
+        const diffTime = now - lastDate;
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        sinceLastLoginStr = `${diffDays} day${diffDays !== 1 ? "s" : ""}`;
+      }
+
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${sl++}</td>
+        <td>${empname}</td>
+        <td>${user.email}</td>
+        <td>${user.perNo}</td>
+        <td>${user.section}</td>
+        <td>${user.version}</td>
+        <td>${lastLoginStr}</td>
+        <td>${sinceLastLoginStr}</td>
+      `;
+      tableBody.appendChild(row);
+    });
+
+  } catch (error) {
+    console.error("Error loading user data:", error);
+  }
+
+}
+//);
+
+UserData();
+
+async function getEmployeeName(perNo) {
+  try {
+    const dbref = ref(getDatabase());
+    const snapshot = await get(child(dbref, "bsnltrpstafflist/" + perNo));
+    return snapshot.exists() ? snapshot.val().empName : "-";
+  } catch (error) {
+    console.error("Error fetching employee name:", error);
+    return "-";
+  }
+}
+
+function formatDate(date) {
+  const yyyy = date.getFullYear();
+  const mm = String(date.getMonth() + 1).padStart(2, '0');
+  const dd = String(date.getDate()).padStart(2, '0');
+  const hh = String(date.getHours()).padStart(2, '0');
+  const min = String(date.getMinutes()).padStart(2, '0');
+  const ss = String(date.getSeconds()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+}
+
+//document.getElementById("usertab").addEventListener("click", loadUserData);
+
+      //.................  end of code for tab4(user data) ..........................//
+
+
+        var slno = 0;
+        var lcrole;
+        var reporttable = document.getElementById("reporttable");
+        var tbody1 = document.getElementById("tbody1");
+        var searchcount = document.getElementById('searchcount');
+        var btnsummary = document.getElementById('btn_summary');
+        var durationobj = []; // Initialize as an array
+        var btn_allsection = document.getElementById('btn_allsection');
+        btn_allsection.style.display = "none";
+        let lcfaultfilter = document.getElementById("input1");
+        let lcid, customer, address, servicetype;
+        //const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+
+        document.getElementById('usertab').style.display = "none";
+        btnsummary.onclick = function () {
+            window.location.href = "faultsummary.html";
+        }
+
+        if (currentuser) {
+            if (userpriv == "LLU" || userpriv == "SAU") {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+            }
+             if (userpriv == "SAU" || userpriv == "GM") {
+                document.getElementById('usertab').style.display = "block";
+                
+            }
+
+
+            if (userpriv == "GM") {
+            }
+            if(userpriv == "LLA")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('myprov').style.display = "none";
+                
+            }
+        }
+
+        function AddDataToTable(faultdurationHr,LCID, PrabalDocketID, Customer, ServiceType, Address, FaultType, OpenTime, Priority, AssignDate, AssignTime, assignedby_workgroup, assignedto_workgroup, Status, Comment, event_ID,isPrabalplus,PrabalID,isMatchedwithPrabalplus) {
+            let trow = document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td4_1 = document.createElement('td');
+            let td4_2 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td5_1 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let viewbtn = document.createElement('button');
+            //let isPplus = isPrabalplus;
+            //console.log(isPplus);
+            viewbtn.innerText = "VIEW";
+            viewbtn.className = "btn btn-default";
+            td5_1.append(viewbtn);
+            const span1 = document.createElement("span");
+            span1.textContent = PrabalDocketID;
+            const text = span1.textContent.trim();
+            const note1 = document.createElement("button");
+            const note2 = document.createElement("button");
+           
+
+        if (isMatchedwithPrabalplus  === "True") {
+                       
+            //note1.innerText = "Docket ("+PrabalID+ ") with same LCID exists in Prabalplus";
+            note1.innerHTML = `<span style="display:block; text-align:justify; width:100%;">
+            Docket (${PrabalID}) with same LCID exists in Prabalplus
+            </span>`;
+            note1.style.width = "200px";
+            note1.style.fontSize = "0.9em";
+            note1.style.fontWeight = "bold";
+            note1.style.color = "black";
+            note1.style.backgroundColor = "pink";
+            note1.style.marginTop = "3px";
+            note1.style.cursor = "default";
+            span1.appendChild(note1);
+        }
+         if (text && isPrabalplus === "True") {
+                       
+            //note2.innerText = "Prabalplus Docket";
+             note2.innerHTML = `<span style="display:block; text-align:justify; width:100%;">
+            Prabalplus Docket
+            </span>`;
+            note2.style.width = "130px";
+            note2.style.fontSize = "0.9em";
+            note2.style.fontWeight = "bold";
+            note2.style.color = "black";
+            note2.style.backgroundColor = "yellow";
+            note2.style.marginTop = "3px";
+            note2.style.cursor = "default";
+            span1.appendChild(note2);
+        }
+
+            // Create the second <span> element
+            const span2 = document.createElement("span");
+            span2.textContent = "view workflow";
+            span2.style.fontStyle = "italic"; 
+            
+            span2.style.color = "blue";
+            span2.style.cursor = "pointer";
+            // Append both spans to the td
+            td2.appendChild(span1);
+
+           const br = document.createElement("br");
+
+            td2.appendChild(br);
+            td2.appendChild(span2);
+            td1.innerHTML = ++slno;
+            //td2.innerHTML = PrabalDocketID;
+            var sectioncomment = Comment;
+
+            //td2.style.cursor = "pointer";
+            span2.onclick = function () {
+                var prabaldocketid = PrabalDocketID;
+                localStorage.setItem("prabaldocketid", prabaldocketid);
+                window.location.href = "prabaldocketview.html";
+            }
+
+            td3.innerHTML = OpenTime;
+            td4.innerHTML = Customer;
+            td4_1.innerHTML = Address;
+            td4_2.innerHTML = Priority;
+
+            
+
+            td5.innerHTML = assignedto_workgroup+" for last "+ faultdurationHr+" Hr(s)";
+           
+            viewbtn.onclick = function () {
+              
+                const message = sectioncomment;
+
+                const wordsToBold = ["LeasedLine", "NIB", "CNTx-NER", "Tx-West", "Tx-South", "Tx-North", "BBM-AGT", "BBM-GB", "BBM-Khowai", "BBM-Dhalai",
+                    "BBM-Unakoti", "BBM-North", "BBM-Bishalgarh", "BBM-Sonamura", "BBM-Gomati", "BBM-South", "CM-Maintenance","SDE-RKPur","SDE-GB","SDE-Dharmanagar","SDE-External","SDE-Bharatnet"];
+
+               
+                let styledMessage = message;
+
+               
+                wordsToBold.forEach(word => {
+                    const regex = new RegExp(`(${word})`, "gi");
+                    styledMessage = styledMessage.replace(regex, `<strong><span style="color: red;">$1</span></strong>`); // Wrap matched word in <strong>
+                });
+
+                // Show SweetAlert with the styled message
+                Swal.fire({
+                    title: 'Section Comment',
+                    html: styledMessage, // Use the dynamically styled message
+                    // icon: 'info',
+                    confirmButtonText: 'Close'
+                });
+            };
+
+
+
+
+
+
+            td5.style.cursor = "pointer";
+            td5.onclick = function () {
+                FilterbySection(assignedto_workgroup); //td5.innerText
+                
+            }
+
+            td6.innerHTML = getDuration(OpenTime);
+           
+
+            function getDuration(startDate) {
+                const start = new Date(startDate);
+                const end = new Date();
+                const diffMs = end - start;
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (3600000)) / (1000 * 60));
+                return `${days} day(s) ${hours} hrs and ${minutes} Mins`;
+            }
+
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td4_1);
+            trow.appendChild(td4_2);
+            trow.appendChild(td5);
+            trow.appendChild(td5_1);
+            trow.appendChild(td6);
+            let durationDays = parseInt(td6.innerText.split(" ")[0]);
+
+            //let priority = td4_2.innerHTML.trim(); // Save original before we change it
+
+// For Normal faults
+if (Priority === "Normal") {
+    if (durationDays >= 15) {
+        td4_2.innerHTML = Priority + " ( > 15 Days)";
+        trow.classList.add("highlight");
+    } else if (durationDays >= 7) {
+        td4_2.innerHTML = Priority + " ( > 7 Days)";
+        trow.classList.add("highlight");
+    } else if (durationDays >= 3) {
+        td4_2.innerHTML = Priority + " ( > 3 Days)";
+        trow.classList.add("highlight");
+    }
+}
+
+// For Critical faults
+if (Priority === "Critical") {
+    if (durationDays >= 15) {
+        td4_2.innerHTML = Priority + " ( > 15 Days)";
+    } else if (durationDays >= 7) {
+        td4_2.innerHTML = Priority + " ( > 7 Days)";
+    } else if (durationDays >= 3) {
+        td4_2.innerHTML = Priority + " ( > 3 Days)";
+    }
+    trow.classList.add("priority-critical");
+}
+
+// Special case for LeasedLine group
+
+if(userpriv == "SAU" || userpriv == "LLU"){
+       if (assignedto_workgroup.trim() === "LeasedLine" && durationDays >= 0) {
+    trow.classList.add("leasedline");
+}         
+
+           }
+
+     
+
+        
+    tbody1.appendChild(trow);
+
+
+        }
+
+        function AddAllItemsToTable(reportlist) {
+            slno = 0;
+            tbody1.innerHTML = "";
+            reportlist.forEach(element => {
+                AddDataToTable(element.faultdurationHr,element.LCID, element.PrabalDocketID, element.Customer, element.ServiceType, element.Address, element.FaultType, element.OpenTime, element.Priority, element.AssignDate, element.AssignTime, element.assignedby_workgroup, element.assignedto_workgroup, element.Status, element.Comment, element.event_ID,element.isPrabalplus,element.PrabalID,element.isMatchedwithPrabalplus);
+            });
+        }
+
+        let cachedFullData = [];
+        function GetAllDataOnce() {
+        loaderContainer.style.display = "flex"; // Show loader
+        spinner.spin(loaderContainer); // start spinner
+            const dbref = ref(db);
+            function GetData() {
+                get(child(dbref, "lcfaultrecords")).then((snapshot) => {
+                    var report = [];
+                    durationobj = []; // Reset the array
+                    snapshot.forEach(childSnapshot => {
+                        const start = new Date(childSnapshot.val().OpenTime);
+
+                        let assigndatetime = childSnapshot.val().AssignDate+" "+childSnapshot.val().AssignTime;
+                        let faultdurationHr = Math.floor((new Date() - new Date(assigndatetime))/(1000*60*60)) ;
+                        const end = new Date();
+                        const diffMs = end - start;
+
+                        const faultData = {
+                            "LCID": childSnapshot.val().LCID,
+                            "PrabalDocketID": childSnapshot.val().PrabalDocketID,
+                            "Customer": childSnapshot.val().Customer,
+                            "ServiceType": childSnapshot.val().ServiceType,
+                            "Address": childSnapshot.val().Address,
+                            "FaultType": childSnapshot.val().FaultType,
+                            "OpenTime": childSnapshot.val().OpenTime,
+                            "Priority": childSnapshot.val().Priority,
+                            "AssignDate": childSnapshot.val().AssignDate,
+                            "AssignTime": childSnapshot.val().AssignTime,
+                            "assignedby_workgroup": childSnapshot.val().assignedby_workgroup,
+                            "assignedto_workgroup": childSnapshot.val().assignedto_workgroup,
+                            "faultdurationHr": faultdurationHr,
+                            "Status": childSnapshot.val().Status,
+                            "Comment": childSnapshot.val().Comment,
+                            "event_ID": childSnapshot.val().event_ID,
+                            "duration": diffMs,
+                            "isPrabalplus": childSnapshot.val().isPrabalplus || "False",
+                            "PrabalID" : childSnapshot.val().PrabalID,
+                            "isMatchedwithPrabalplus": childSnapshot.val().isMatchedwithPrabalplus
+                        };
+
+
+    if (currentuser) {
+    const workgroupPrivileges = {
+        "NIBU": { role: "NIB", workgroup: "NIB" },
+        "CM-Mtce": { role: "CM-Maintenance", workgroup: "CM-Maintenance" },
+        "TXWU": { role: "Tx-West", workgroup: "Tx-West" },
+        "CNTU": { role: "CNTx-NER", workgroup: "CNTx-NER" },
+        "TXNU": { role: "Tx-North", workgroup: "Tx-North" },
+        "TXSU": { role: "Tx-South", workgroup: "Tx-South" },
+        "BBM-AGT": { role: "BBM-AGT", workgroup: "BBM-AGT" },
+        "BBM-GB": { role: "BBM-GB", workgroup: "BBM-GB" },
+        "BBM-Bishalgarh": { role: "BBM-Bishalgarh", workgroup: "BBM-Bishalgarh" },
+        "BBM-Sonamura": { role: "BBM-Sonamura", workgroup: "BBM-Sonamura" },
+        "BBM-Gomati": { role: "BBM-Gomati", workgroup: "BBM-Gomati" },
+        "BBM-South": { role: "BBM-South", workgroup: "BBM-South" },
+        "BBM-Khowai": { role: "BBM-Khowai", workgroup: "BBM-Khowai" },
+        "BBM-Dhalai": { role: "BBM-Dhalai", workgroup: "BBM-Dhalai" },
+        "BBM-Unakoti": { role: "BBM-Unakoti", workgroup: "BBM-Unakoti" },
+        "BBM-North": { role: "BBM-North", workgroup: "BBM-North" },
+        "SDE-RKPur": { role: "SDE-RKPur", workgroup: "SDE-RKPur" },
+        "SDE-GB": { role: "SDE-GB", workgroup: "SDE-GB" },
+        "SDE-DNR": { role: "SDE-Dharmanagar", workgroup: "SDE-Dharmanagar" },
+        "SDE-EXT": { role: "SDE-External", workgroup: "SDE-External" },
+        "SDE-BN": { role: "SDE-Bharatnet", workgroup: "SDE-Bharatnet" }
+    };
+
+    const managerPrivileges = {
+        "AGMTX": {
+            role: "AGMTX",
+            workgroups: ["Tx-West", "Tx-South", "Tx-North"]
+        },
+        "AGMW": {
+            role: "AGMW",
+            workgroups: ["BBM-AGT", "BBM-GB", "BBM-Bishalgarh", "BBM-Sonamura", "Tx-Khowai", "SDE-GB", "SDE-External"]
+        },
+        "AGMN": {
+            role: "AGMN",
+            workgroups: ["BBM-Dhalai", "BBM-North", "BBM-Unakoti", "Tx-North", "SDE-Dharmanagar"]
+        },
+        "AGMS": {
+            role: "AGMS",
+            workgroups: ["BBM-Gomati", "BBM-South", "Tx-South", "SDE-RKPur"]
+        }
+    };
+
+    // Check for leased line privileges
+    if (["SAU", "LLU", "GM", "DGM", "AGMLL", "LLA"].includes(userpriv)) {
+        lcrole = "LeasedLine";
+        report.push(faultData);
+    }
+    // Check for workgroup-specific privileges
+    else if (workgroupPrivileges[userpriv]) {
+        const priv = workgroupPrivileges[userpriv];
+        if (faultData.assignedto_workgroup === priv.workgroup) {
+            lcrole = priv.role;
+            report.push(faultData);
+        }
+    }
+    // Check for manager privileges
+    else if (managerPrivileges[userpriv]) {
+        const priv = managerPrivileges[userpriv];
+        if (priv.workgroups.includes(faultData.assignedto_workgroup)) {
+            lcrole = priv.role;
+            report.push(faultData);
+        }
+    }
+}
+
+
+
+                        durationobj.push(faultData); // Add to durationobj array
+                    });
+
+                    
+                    report.sort((b1, b2) => (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+                    AddAllItemsToTable(report);
+                    
+                    searchcount.innerText = slno;
+                    spinner.stop();
+                    //cachedFullData = [...report];
+                loaderContainer.style.display = "none";
+                });
+            }
+
+          
+            GetData();
+            
+           
+            
+        }
+
+        window.onload = GetAllDataOnce;
+
+        lcfaultfilter.addEventListener('keyup', function () {
+            let searchitem = lcfaultfilter.value.toUpperCase();
+            var filteredlcfault = [];
+            durationobj.forEach(fault => {
+                if (
+                    fault.PrabalDocketID.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.Customer.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.Address.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.assignedto_workgroup.toUpperCase().indexOf(searchitem) > -1
+                ) {
+                    filteredlcfault.push(fault);
+                }
+            });
+            AddAllItemsToTable(filteredlcfault);
+            searchcount.innerText = slno;
+
+            if (searchitem == "") {
+                GetAllDataOnce();
+            }
+        });
+
+        var btn_export1 = document.getElementById('btn_export1');
+        btn_export1.addEventListener('click', exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+            $('#reporttable').table2excel({
+                exclude: ".no-export",
+                filename: "download.xls",
+                fileext: ".xls",
+                exclude_links: true,
+                exclude_inputs: true
+            });
+        }
+        btn_allsection.onclick = function(){
+             //window.location.reload();
+            //GetAllDataOnce();
+            if (cachedFullData.length > 0) {
+        // Use cached data instead of fetching from database
+        const sortedData = [...cachedFullData].sort((b1, b2) => 
+            (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : 
+            (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+        
+        AddAllItemsToTable(sortedData);
+        searchcount.innerText = slno;
+        btn_allsection.style.display = "none";
+    } else {
+        // Fallback to database fetch if cache is empty
+        GetAllDataOnce();
+    }
+        }
+        function FilterbySection(section) {
+            btn_allsection.style.display = "block";
+             
+            if (cachedFullData.length > 0) {
+        // Filter from cached data
+        const filteredData = cachedFullData.filter(item => 
+            item.assignedto_workgroup === section);
+        
+        filteredData.sort((b1, b2) => 
+            (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : 
+            (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+        
+        AddAllItemsToTable(filteredData);
+        searchcount.innerText = slno;
+    }else {
+
+           const dbref = ref(db);
+            get(child(dbref, "lcfaultrecords")).then((snapshot) => {
+                var report = [];
+                snapshot.forEach(childSnapshot => {
+                    const start = new Date(childSnapshot.val().OpenTime);
+                    const end = new Date();
+                    const diffMs = end - start;
+
+                     let assigndatetime = childSnapshot.val().AssignDate+" "+childSnapshot.val().AssignTime;
+                     let faultdurationHr = Math.floor((new Date() - new Date(assigndatetime))/(1000*60*60)) ;
+                     //let assignworkgroup = childSnapshot.val().assignedto_workgroup+" for last "+faultdurationHr+" Hr(s)";
+
+                    var durationobj = {
+                        "PrabalDocketID": childSnapshot.val().PrabalDocketID,
+                        "OpenTime": childSnapshot.val().OpenTime,
+                        "Priority": childSnapshot.val().Priority,
+                        "Customer": childSnapshot.val().Customer,
+                        "Address": childSnapshot.val().Address,
+                        "assignedto_workgroup": childSnapshot.val().assignedto_workgroup,
+                        "faultdurationHr": faultdurationHr,
+                        "Comment": childSnapshot.val().Comment,
+                        "duration": diffMs,
+                        "isPrabalplus": childSnapshot.val().isPrabalplus || "False",
+                        "PrabalID" : childSnapshot.val().PrabalID,
+                        "isMatchedwithPrabalplus": childSnapshot.val().isMatchedwithPrabalplus
+                    };
+
+                    if (childSnapshot.val().assignedto_workgroup == section) {  //durationobj
+                        report.push(durationobj);
+                    }
+                    report.sort((b1, b2) => (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+                });
+
+                AddAllItemsToTable(report);
+                searchcount.innerText = slno;
+            });
+
+    }
+
+
+
+        }
+
+
+        // .............................code for docket history...........
+
+        var historytable = document.getElementById("historytable");
+        var tbody2 = document.getElementById("tbody2");
+        let monthwise = document.getElementById("monthwise");
+       
+        const selectedOption = document.getElementById("monthwise").value;
+
+        var searchcount2 = document.getElementById('searchcount2');
+        var slno2 = 0;
+
+        function AddDataToTable2(LCID, PrabalDocketID, Customer, ServiceType, Address,  OpenTime, Priority,CloseTime,FaultDuration) {
+            let trow2 = document.createElement("tr");
+            let td2_1 = document.createElement('td');
+            let td2_2 = document.createElement('td');
+            let td2_3 = document.createElement('td');
+            let td2_4 = document.createElement('td');
+            let td2_5 = document.createElement('td');
+            let td2_6 = document.createElement('td');
+            let td2_7 = document.createElement('td');
+            let td2_8 = document.createElement('td');
+
+ 	    td2_1.innerHTML = ++slno2;
+
+
+
+        const span2_1 = document.createElement("span");
+            span2_1.textContent = PrabalDocketID;
+
+            // Create the second <span> element
+            const span2_2 = document.createElement("span");
+            span2_2.textContent = "view workflow";
+            span2_2.style.fontStyle = "italic"; 
+            
+            span2_2.style.color = "blue";
+            span2_2.style.cursor = "pointer";
+            // Append both spans to the td
+            td2_2.appendChild(span2_1);
+
+           const br = document.createElement("br");
+
+            td2_2.appendChild(br);
+            td2_2.appendChild(span2_2);
+
+            span2_2.onclick = function () {
+                var prabaldocketid = PrabalDocketID;
+                localStorage.setItem("prabaldocketid", prabaldocketid);
+                window.location.href = "prabaldocketview.html";
+            }
+
+          td2_3.innerHTML = OpenTime;
+          td2_4.innerHTML = LCID;
+	     td2_5.innerHTML = Customer;
+          td2_6.innerHTML = Address;
+          td2_7.innerHTML = CloseTime;
+	    td2_8.innerHTML = FaultDuration;
+           
+
+            trow2.appendChild(td2_1);
+            trow2.appendChild(td2_2);
+            trow2.appendChild(td2_3);
+            trow2.appendChild(td2_4);
+            trow2.appendChild(td2_5);
+            trow2.appendChild(td2_6);
+            trow2.appendChild(td2_7);
+            trow2.appendChild(td2_8);
+           
+            tbody2.appendChild(trow2);
+        }
+
+
+ function AddAllItemsToTable2(dockethistorylist) {
+            slno2 = 0;
+            tbody2.innerHTML = "";
+            dockethistorylist.forEach(element => {
+                AddDataToTable2(element.LCID, element.PrabalDocketID, element.Customer, element.ServiceType, element.Address, element.OpenTime, element.Priority, element.CloseTime, element.FaultDuration,element.isPrabalplus);
+            });
+        }
+
+    GetAllDataOnce2();
+  
+function GetAllDataOnce2() {
+    loaderContainer2.style.display = "flex";
+    spinner2.spin(loaderContainer2);
+    
+    // Initial load with default 1 month
+    loadHistoryData("1 Month");
+    
+    // Set up event listener for dropdown changes
+    document.getElementById('monthwise').addEventListener('change', function() {
+        loaderContainer2.style.display = "flex";
+        spinner2.spin(loaderContainer2);
+        loadHistoryData(this.value);
+    });
+}
+
+// 3. Add this helper function (put it near your other functions):
+function loadHistoryData(timeRange) {
+    const cutoffDate = getCutoffDate(timeRange);
+    const historyRef = ref(db, "dockethistory");
+    const q = query(historyRef, orderByChild("CloseTime"), startAt(cutoffDate.toISOString()));
+
+    get(q).then((snapshot) => {
+        if (snapshot.exists()) {
+            const historylist = [];
+            snapshot.forEach(childSnapshot => {
+                historylist.push(childSnapshot.val());
+            });
+            
+            // Sort by CloseTime (newest first)
+            historylist.sort((a, b) => 
+                new Date(b.CloseTime) - new Date(a.CloseTime));
+            
+            // Update the table
+            AddAllItemsToTable2(historylist);
+        }
+        
+        // Hide spinner
+        spinner2.stop();
+        loaderContainer2.style.display = "none";
+    }).catch((error) => {
+        console.error("Error loading history data:", error);
+        spinner2.stop();
+        loaderContainer2.style.display = "none";
+    });
+}
+
+// 4. Make sure this is available (you already have it, just ensure it's accessible):
+function getCutoffDate(selectedOption) {
+    const today = new Date();
+    const cutoffDate = new Date(today);
+    
+    switch(selectedOption) {
+        case "1 Month":
+            cutoffDate.setMonth(today.getMonth() - 1);
+            break;
+        case "2 Month":
+            cutoffDate.setMonth(today.getMonth() - 2);
+            break;
+        case "3 Month":
+            cutoffDate.setMonth(today.getMonth() - 3);
+            break;
+        case "6 Month":
+            cutoffDate.setMonth(today.getMonth() - 6);
+            break;
+        case "1 Year":
+            cutoffDate.setFullYear(today.getFullYear() - 1);
+            break;
+        default:
+            cutoffDate.setMonth(today.getMonth() - 1);
+    }
+    
+    cutoffDate.setHours(0, 0, 0, 0);
+    return cutoffDate;
+}
+
+ document.getElementById("input2").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = tbody2.getElementsByTagName("tr");
+    let visibleCount = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName("td");
+        let match = false;
+
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().includes(filter)) {
+                match = true;
+                break;
+            }
+        }
+
+        rows[i].style.display = match ? "" : "none";
+        if (match) visibleCount++;
+    }
+
+    document.getElementById("searchcount2").innerText = visibleCount;
+});
+
+
+
+
+    document.getElementById('btn_datesort').onclick = 
+    function (){
+  const startDateInput = document.getElementById("startDate").value;
+  const endDateInput = document.getElementById("endDate").value;
+  const table = document.getElementById("historytable");
+  const rows = table.getElementsByTagName("tr");
+
+  const startDate = startDateInput ? new Date(`${startDateInput}T00:00:00`) : null;
+  const endDate = endDateInput ? new Date(`${endDateInput}T23:59:59`) : null;
+
+  for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+    const dateCell = rows[i].getElementsByTagName("td")[6];
+    if (dateCell) {
+      const dateText = dateCell.textContent || dateCell.innerText;
+      const rowDate = new Date(dateText);
+
+      if (
+        (!startDate || rowDate >= startDate) &&
+        (!endDate || rowDate <= endDate)
+      ) {
+        rows[i].style.display = ""; // Show the row
+      } else {
+        rows[i].style.display = "none"; // Hide the row
+      }
+    }
+  }
+};
+
+document.getElementById('btn_clearfilter').onclick = 
+    function () {
+
+         // Clear the date inputs
+    document.getElementById("startDate").value = "";
+    document.getElementById("endDate").value = "";
+
+    // Show all rows in the table
+    const table = document.getElementById("historytable");
+    const rows = table.getElementsByTagName("tr");
+
+    for (let i = 1; i < rows.length; i++) { // Start from 1 to skip header
+        rows[i].style.display = ""; // Show all rows
+    }
+
+    // Optionally, reload the table data to reset any other filters
+    GetAllDataOnce2();
+    }
+       
+    var btn_export2 = document.getElementById('btn_export2');
+        btn_export2.addEventListener('click', exportCSVExcel2);
+
+        function exportCSVExcel2() {
+            $('#historytable').table2excel({
+                exclude: ".no-export",
+                filename: "download.xls",
+                fileext: ".xls",
+                exclude_links: true,
+                exclude_inputs: true
+            });
+        }
+
+
+                 
+        
+
+
+// ...................end of code for docket history .............. 
+
+//.................code for Frequent Fault ............//
+
+        var freqfaulttable = document.getElementById("freqfaulttable");
+        var tbody3 = document.getElementById("tbody3");
+        
+
+       // var searchcount3 = document.getElementById('searchcount2');
+        var slno3 = 0;
+
+
+        function AddDataToTable3(LCID, Customer, Address, latestDate) {
+    let trow3 = document.createElement("tr");
+    let td3_1 = document.createElement('td');
+    let td3_2 = document.createElement('td');
+    let td3_3 = document.createElement('td');
+    let td3_4 = document.createElement('td');
+    let td3_5 = document.createElement('td');
+    td3_2.style.width = "150px";
+
+    td3_1.innerHTML = ++slno3;
+    //td3_2.innerHTML = LCID;
+
+
+
+    
+        const span3_1 = document.createElement("span");
+            span3_1.textContent = LCID;
+
+            // Create the second <span> element
+            const span3_2 = document.createElement("span");
+            span3_2.textContent = "view fault history";
+            span3_2.style.fontStyle = "italic"; 
+            
+            span3_2.style.color = "blue";
+            span3_2.style.cursor = "pointer";
+            // Append both spans to the td
+            td3_2.appendChild(span3_1);
+
+           const br = document.createElement("br");
+
+            td3_2.appendChild(br);
+            td3_2.appendChild(span3_2);
+
+            span3_2.onclick = function () {
+                //var prabaldocketid = PrabalDocketID;
+                localStorage.setItem("lcid", LCID);
+        window.location.href = "lcfaulthistory.html";
+            }
+            td3_3.innerHTML = Customer;
+            td3_4.innerHTML = Address;
+            td3_5.innerHTML = latestDate ? latestDate.getFullYear() + "-" +
+            String(latestDate.getMonth() + 1).padStart(2, '0') + "-" +
+            String(latestDate.getDate()).padStart(2, '0')
+            : "";
+
+
+    trow3.appendChild(td3_1);
+    trow3.appendChild(td3_2);
+    trow3.appendChild(td3_3);
+    trow3.appendChild(td3_4);
+    trow3.appendChild(td3_5);
+    tbody3.appendChild(trow3);
+}
+
+
+ function AddAllItemsToTable3(freqfaultlist) {
+            slno3 = 0;
+            tbody3.innerHTML = "";
+            freqfaultlist.forEach(element => {
+                AddDataToTable3(element.LCID,element.Customer,element.Address,element.latestFaultDate );
+            });
+            document.getElementById("searchcount3").innerText = freqfaultlist.length;
+        }
+
+    
+
+    loaderContainer3.style.display = "flex"; // Show loader
+    spinner3.spin(loaderContainer2); // start spinner
+  const docketsRef = ref(db, 'dockethistory'); 
+  const snapshot = await get(docketsRef);
+
+  if (!snapshot.exists()) {
+    console.log('No data found.');
+    //return [];
+  }
+
+  const dockets = [];
+  snapshot.forEach((childSnapshot) => {
+    //console.log(childSnapshot.val());
+    const data = childSnapshot.val();
+    dockets.push({
+      circuitId: data.LCID,
+      customer: data.Customer, // Add customer name
+      address: data.Address,   // Add address
+      openDate: new Date(data.OpenTime.replace(/-/g, '/')),
+      closeDate: new Date(data.CloseTime.replace(/-/g, '/')), // Convert to Date object
+    });
+  });
+
+ 
+
+const circuitsMap = new Map();
+
+for (let i = 0; i < dockets.length; i++) {
+    for (let j = i + 1; j < dockets.length; j++) {
+        if (dockets[i].circuitId === dockets[j].circuitId) {
+            const timeDiff = Math.abs(dockets[i].closeDate - dockets[j].openDate);
+            const daysDiff = timeDiff / (1000 * 60 * 60 * 24);
+
+            if (daysDiff <= 7) {
+                const latestDate = new Date(
+                    Math.max(dockets[i].closeDate, dockets[j].closeDate)
+                );
+
+                circuitsMap.set(dockets[i].circuitId, {
+                    LCID: dockets[i].circuitId,
+                    Customer: dockets[i].customer,
+                    Address: dockets[i].address,
+                    latestFaultDate: latestDate
+                });
+            }
+        }
+    }
+}
+
+// Convert Map to Array and sort by latest fault date (descending)
+const freqfaultlist = Array.from(circuitsMap.values()).sort((a, b) => b.latestFaultDate - a.latestFaultDate);
+
+// Pass to table renderer
+AddAllItemsToTable3(freqfaultlist);
+
+// Live Search for Frequent Faults
+document.getElementById("input3").addEventListener("keyup", function () {
+    let filter = this.value.toLowerCase();
+    let rows = tbody3.getElementsByTagName("tr");
+    let visibleCount = 0;
+
+    for (let i = 0; i < rows.length; i++) {
+        let cells = rows[i].getElementsByTagName("td");
+        let match = false;
+
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().includes(filter)) {
+                match = true;
+                break;
+            }
+        }
+
+        rows[i].style.display = match ? "" : "none";
+        if (match) visibleCount++;
+    }
+
+    document.getElementById("searchcount3").innerText = visibleCount;
+});
+
+
+
+    spinner3.stop();
+    loaderContainer3.style.display = "none";
+
+  
+
+    
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    </script> 
+</body>
+</html>
+</body>
+</html>

@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Provision Orders</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+   #provdetaildiv{
+    position: fixed;
+    top: 200px; /* Distance from the top */
+      right: 100px; /* Distance from the right */
+      background-color: #FFDEC8;
+      border: 1px solid black;
+      z-index: 1000; /* Ensure it's above other elements */
+      overflow: auto;
+   }
+   #provdetailtable td  {
+    border: 1px solid black;
+   }
+   #provdetailtable th  {
+    border: 1px solid black;
+   }
+      /* Add this CSS to position the open-btn */
+      .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    
+</style>
+
+<body>
+<div>
+    <div style="top: 40px;"class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+           <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+            <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+            <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+            <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+            <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+    
+    
+</div>
+
+<div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+    <table class="table table-bordered" id="workorder-table">
+      <thead>
+        <tr>
+          <th>CRM Order No</th>
+          <th>Order Date</th>
+          <th>LC ID</th>
+          <th>Customer</th>
+          <th>Address</th>
+          <th>Order Type</th>
+          <th>Circuit Type</th>
+          <th>Priority</th>
+        </tr>
+      </thead>
+      <tbody id="workorder-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+
+</div>
+   
+    
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="script.js"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+//import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+ import { app} from "./firebase-config.js";  
+
+//const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+//const auth = getAuth(app);
+//const firestore = getFirestore(app);
+
+  const currentuser = localStorage.getItem("currentuser");
+  const userRole = localStorage.getItem("userpriv");
+//   const userData = userDoc.data();
+//   const userRole = userData.role || 'user';
+//   const userSection = userData.section || '';
+  var userSection = localStorage.getItem("userSection");
+  console.log(userSection);
+  console.log(userRole);
+
+  const workordersRef = ref(db, 'workorders');
+  onValue(workordersRef, (snapshot) => {
+    const orders = snapshot.val();
+    const tbody = document.getElementById("workorder-body");
+    tbody.innerHTML = "";
+
+    for (let key in orders) {
+      const order = orders[key];
+
+      const assignedSections = order.sections ? Object.keys(order.sections) : [];
+      const isVisible = userRole === "SAU" || userRole === "LLU" || assignedSections.includes(userSection);
+      const crmorder = order.CRMOrder;
+
+      if (isVisible) {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>
+              <span>${order.CRMOrder}</span> <br>
+              <span 
+              class="orderview" 
+              data-crm="${order.CRMOrder}"
+              style="color:blue; font-style:italic; cursor:pointer; text-decoration:underline;"
+            >details</span>
+            
+            </td>
+
+          <td>${order.OrderDate || ''}</td>
+          <td>${order.LCID || ''}</td>
+          <td>${order.Customer || ''}</td>
+          <td>${order.Address || ''}</td>
+          <td>${order.OrderType || ''}</td>
+          <td>${order.ServiceType || ''}</td>
+          <td>${order.Priority || ''}</td>
+        `;
+        tbody.appendChild(row);
+         
+      }
+    
+
+      document.getElementById("workorder-body").addEventListener("click", function (e) {
+  if (e.target && e.target.classList.contains("orderview")) {
+    const crmorder = e.target.getAttribute("data-crm");
+    localStorage.setItem("crmorder", crmorder);
+    window.location.href = "findworkorder.html";
+  }
+});
+
+
+    }
+  });
+
+
+    </script>
+</body>
+</html>

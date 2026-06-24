@@ -1,0 +1,291 @@
+body{
+    margin:0;
+    padding:0;
+    background-color:white;
+
+}
+ul{
+    
+    margin-top: 0;
+    margin-bottom: 0;
+    list-style-type: none;
+    background-color: #034b7d;
+    color: white;
+    font-family: sans-serif;
+}
+ul li{
+    
+    display: inline-block;
+    padding: 10px;
+}
+ul li:hover{
+    background-color: green;
+    color: white;
+}
+.dropdown{
+    display: none;
+    text-decoration: none;
+}
+ul li:hover .dropdown{
+    display: block;
+    position: absolute;
+    margin-left: -0.25cm;
+    margin-top: 0.25cm;
+}
+.dropdown ul li{
+    display: block;
+}
+.dropdown2 ul li{
+    display: block;
+}
+.dropdown ul{
+    margin: 0;
+    padding: 0;
+}
+
+
+
+#logout{
+    text-align: right;
+    margin-right: 20px;
+    
+}
+#user{
+    text-align: right;
+    margin-left: 450px;
+    
+}
+.dropdown2{
+    display: none;
+}
+.dropdown ul li:hover .dropdown2{
+    
+    display: block;
+    position: absolute;
+    margin-left: 136px;
+    margin-top: -28px;
+}
+.dropdown2 ul li{
+    display: block;
+    width: 120px;
+}
+
+.dropdown3{
+    display: none;
+}
+.dropdown ul li:hover .dropdown3{
+    display: block;
+    position: absolute;
+    margin-left: 135px;
+    margin-top: -29px;
+}
+.dropdown3 ul li{
+    display: block;
+    width: 120px;
+}
+.header-images{
+    margin-top: 10px;
+    display: flex;
+}
+
+#bsnlimage{
+    align-items: center;
+    margin-top: 20px;
+    height: 320px;
+    width: 610px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url(bsnl-new-logo.jpg);
+    background-size: cover;
+    
+}
+#qrdiv{
+    display: block;
+    align-items: center;
+    align-content: center;
+    text-align: center;
+}
+#qrcode{
+        
+    height: 200px;
+    width: 200px;
+    background-image: url(appurlqrcode.jpg);
+    background-size: cover;
+}
+#qrheader{
+    text-align: center;
+   
+}
+#bsnlname{
+    text-align: center;
+    font-size: 60px;
+    font-weight: bolder;
+    color: #034b7d;
+
+}
+#tripuraba{
+    text-align: center;
+    font-size: 60px;
+    font-weight: bolder;
+    color: #034b7d;
+}
+#staffeditform{
+    margin: auto;
+    text-align:left;
+    text-justify: auto;
+    margin-left: 50px;
+    
+    margin-top: -16px;
+    height: 500px;
+    width: 700px;
+    display: block;
+    
+    background-color: cornflowerblue;
+}
+
+#outerstaffeditform{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    height: 550px;
+    width: 750px;
+    background-color: cornflowerblue;
+
+}
+#staffname{
+    width: 300px;
+    text-align: left;
+}
+a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+#userbuttonset1{
+    margin-top: 10px;
+    margin-left: 300px;
+    display: inline-block;
+    margin-right: 300px;
+    margin-right: auto;
+}
+
+#userbuttonset2{
+    margin-top: 10px;
+    margin-left: 300px;
+    display: inline-block;
+    margin-right: 300px;
+    margin-right: auto;
+
+}
+#input1{
+    margin-left: 400px;
+    align-self:flex-end;
+}
+#circularView:hover{
+    cursor: pointer;
+}
+
+#input2{
+    margin-left: 500px;
+    align-self:flex-end;
+}
+.form{
+    width: 400px;
+    border-radius: 5px;
+    justify-content: center;
+    align-items: center;
+    /* height:fit-content;  */
+    padding: 5px 10px;
+}
+#vendorselect{
+ justify-content: center;
+ align-items: center;
+ margin-top: 5px;
+}
+#vendorform{
+    margin: auto;
+    text-align:left;
+    text-justify: auto;
+    margin-left: 50px;
+    
+    margin-top: -16px;
+    height: 500px;
+    width: 700px;
+    display: block;
+    
+    background-color: cornflowerblue;
+}
+
+#outervendorform{
+    margin-left: auto;
+    margin-right: auto;
+    text-align: center;
+    height: 550px;
+    width: 750px;
+    background-color: cornflowerblue;
+
+}
+#btn_vendor{
+    align-items:center;
+    justify-content: center;
+    min-width: 500px;
+    height: 50px;
+}
+.dropdown4{
+    display: none;
+}
+.dropdown ul li:hover .dropdown4{
+    display: block;
+    position: absolute;
+    margin-left: 135px;
+    margin-top: -29px;
+}
+.dropdown4 ul li{
+    display: block;
+    width: 120px;
+}
+
+.dropdown5{
+    display: none;
+}
+.dropdown ul li:hover .dropdown5{
+    display: block;
+    position: absolute;
+    margin-left: 135px;
+    margin-top: -29px;
+}
+.dropdown5 ul li{
+    display: block;
+    width: 120px;
+}
+.dropdown6{
+    display: none;
+}
+.dropdown4 ul li:hover .dropdown6{
+    display: block;
+    position: absolute;
+    margin-left: 130px;
+    margin-top: -28px;
+}
+.dropdown6 ul li{
+    display: block;
+    width: 120px;
+}
+.button-class{
+    background-color: coral;
+    color: white;
+    font-weight: bold;
+    width: auto;
+}
+.input{
+    border: 2px solid coral;
+    border-radius: 4px;
+}
+#vendordetails{
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    
+}
+

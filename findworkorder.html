@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find Work Orders</title>
+     
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+    <!-- <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- <script src="scrollingMessage.js"></script> -->
+    
+</head>
+<style>
+
+    
+.loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    /* a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+} */
+</style>
+
+<body>
+
+    <!-- Loader -->
+<!-- <div class="loader-container" id="loader"></div> -->
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar" style="top: 40px;">
+  <button class="close-btn" id="close-btn">&times;</button>
+  <ul class="menu">
+   <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+  </ul>
+</div>
+
+
+<!-- Main Content -->
+<div class="main-content">
+  <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+  <br><br>
+
+  <h3>Work Order Details</h3>
+<!-- <div>
+  <label>Enter CRM Order No: </label>
+  <input type="text" id="reassign-crm" />
+  <button onclick="loadWorkOrder()">Load</button>
+</div> -->
+
+<div id="order-details" style="display: none; margin-top: 20px;">
+    <p><strong>Order details:</strong></p>
+    <!-- <p><strong>CRM Order No:</strong> <span id="crm-display"></span></p>
+  <p><strong>Order Date:</strong> <span id="date-display"></span></p>
+  <p><strong>LC ID:</strong> <span id="lcid-display"></span></p>
+  <p><strong>Customer:</strong> <span id="customer-display"></span></p>
+   <p><strong>Address:</strong> <span id="address-display"></span></p>
+  <p><strong>Order Type:</strong> <span id="order-display"></span></p>
+   <p><strong>Circuit Type:</strong> <span id="circuit-display"></span></p>
+  <p><strong>Priority:</strong> <span id="priority-display"></span></p>
+  <p><strong>Assigned Sections:</strong> <ul id="section-list"></ul></p> -->
+
+  <table class="table table-bordered" id="order-info-table">
+  <thead>
+    <tr>
+      <th>CRM Order No</th>
+      <th>Order Date</th>
+      <th>LC ID</th>
+      <th>Customer</th>
+      <th>Address</th>
+      <th>Order Type</th>
+      <th>Circuit Type</th>
+      <th>Priority</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td id="crm-display"></td>
+      <td id="date-display"></td>
+      <td id="lcid-display"></td>
+      <td id="customer-display"></td>
+      <td id="address-display"></td>
+      <td id="order-display"></td>
+      <td id="circuit-display"></td>
+      <td id="priority-display"></td>
+    </tr>
+  </tbody>
+</table>
+<br>
+<div id="commission-controls" style="margin-top: 20px;"></div>
+<br>
+<p><strong>Assigned Sections:</strong></p>
+  <table class="table table-bordered" id="section-table" style="width: 100%;">
+    
+  <thead>
+    <tr>
+      <th>Section</th>
+      <th>Assigned Date</th>
+      <th>Initiator Comment</th>
+      <th>Acknowledged</th>
+      <th>Status</th>
+      <th>Completed</th>
+      <th>Verified</th>
+      <th>Close Date</th>
+      <th>Close Comment</th>
+      <th>Action</th>
+    </tr>
+  </thead>
+  <tbody id="section-table-body">
+    <!-- Filled dynamically -->
+  </tbody>
+</table>
+<div id="reassign-form">
+<label>Assign to New Section: </label>
+  <select id="new-section">
+    <option>Tx-Installation</option>
+    <option>NIB</option>
+    <option>CNTx-NER</option>
+    <option>Tx-West</option>
+    <option>Tx-South</option>
+    <option>Tx-North</option>
+    <option>BBM-AGT</option>
+    <option>BBM-GB</option>
+    <option>BBM-Khowai</option>
+    <option>BBM-Dhalai</option>
+    <option>BBM-Unakoti</option>
+    <option>BBM-North</option>
+    <option>BBM-Bishalgarh</option>
+    <option>BBM-Sonamura</option>
+    <option>BBM-Gomati</option>
+    <option>BBM-South</option>
+    <option>CM-Maintenance </option>
+    <option>SDE-RKPur </option>
+    <option>SDE-GB</option>
+    <option>SDE-Dharmanagar</option>
+    <option>SDE-External </option>
+    <option>SDE-Bharatnet </option>
+
+  </select>
+
+  <br><br>
+  <label>Initiator Comment:</label>
+  <input type="text" id="reassign-comment" />
+  <br><br>
+  <button onclick="reassignWorkOrder()">Assign to New Section</button>
+</div>
+  
+</div>
+
+</div>
+   
+   
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+    <script type="module">
+
+  import { getDatabase, ref, get, set, update, child } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+  const db = getDatabase();
+
+    loadWorkOrder();
+
+
+      function checkAllVerifiedAndToggleCommission(crmOrder, sectionData) {
+    const allVerified = Object.values(sectionData).every(sec => sec.isVerified === true);
+    const commissionDiv = document.getElementById("commission-controls");
+    commissionDiv.innerHTML = '';
+
+    if (allVerified) {
+        const dbRef = ref(db, `workorders/${crmOrder}`);
+        get(dbRef).then(snapshot => {
+            const data = snapshot.val();
+            if (data.isCommission === true) {
+                const delBtn = document.createElement("button");
+                delBtn.className = "btn btn-danger";
+                delBtn.textContent = "DELETE";
+                delBtn.onclick = () => deleteWorkOrder(crmOrder);
+                commissionDiv.appendChild(delBtn);
+            } else {
+                const commBtn = document.createElement("button");
+                commBtn.className = "btn btn-primary";
+                commBtn.textContent = "COMMISSION";
+                commBtn.onclick = () => commissionWorkOrder(crmOrder);
+                commissionDiv.appendChild(commBtn);
+            }
+        });
+    }
+}
+
+function commissionWorkOrder(crmOrder) {
+    Swal.fire({
+        title: "Commission this work order?",
+        showCancelButton: true,
+        confirmButtonText: "Yes"
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const updates = {
+                isCompleted: true,
+                isCommission: true,
+                CommissionDate: localDate()
+            };
+            await update(ref(db, `workorders/${crmOrder}`), updates);
+            Swal.fire("Commissioned", "Work order marked as completed.", "success");
+            loadWorkOrder();
+        }
+    });
+}
+
+async function deleteWorkOrder(crmOrder) {
+    const sourceRef = ref(db, `workorders/${crmOrder}`);
+    const destRef = ref(db, `closedworkorders/${crmOrder}`);
+
+    try {
+        const snap = await get(sourceRef);
+        if (!snap.exists()) return Swal.fire("Error", "Work order not found.", "error");
+
+        await set(destRef, snap.val());
+        await set(sourceRef, null);
+
+        Swal.fire("Deleted", "Work order moved to closedworkorders.", "success");
+        document.getElementById("order-details").style.display = "none";
+    } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to delete work order.", "error");
+    }
+}
+
+
+
+
+
+    function localDate(){
+      const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDate = `${year}-${month}-${day}`;
+    return localDate;
+    }
+
+    async function loadWorkOrder() {
+    //const crmOrder = document.getElementById("reassign-crm").value.trim();
+    const section = localStorage.getItem("userSection");
+    const userpriv = localStorage.getItem("userpriv");
+    const crmOrder = localStorage.getItem("crmorder");
+    const orderRef = ref(db, `workorders/${crmOrder}`);
+    console.log(section);
+    console.log(userpriv);
+
+   if (userpriv !== "SAU" && userpriv !== 'LLU') {
+    document.getElementById("reassign-form").style.display = "none";
+  }
+
+    try {
+        const snapshot = await get(orderRef);
+        if (snapshot.exists()) {
+            const data = snapshot.val();
+
+            // Fill order details
+            document.getElementById("crm-display").textContent = data.CRMOrder || 'N/A';
+            document.getElementById("date-display").textContent = data.OrderDate || 'N/A';
+            document.getElementById("lcid-display").textContent = data.LCID || 'N/A';
+            document.getElementById("customer-display").textContent = data.Customer || 'N/A';
+            document.getElementById("address-display").textContent = data.Address || 'N/A';
+            document.getElementById("order-display").textContent = data.OrderType || 'N/A';
+            document.getElementById("circuit-display").textContent = data.ServiceType || 'N/A';
+            document.getElementById("priority-display").textContent = data.Priority || 'N/A';
+
+            const sectionTableBody = document.getElementById("section-table-body");
+            sectionTableBody.innerHTML = '';
+
+            const canEditField = (field) => {
+                if (userpriv === 'SAU' || userpriv === 'LLU') return field === 'isVerified';
+                return true;
+            };
+
+            if (data.sections) {
+                Object.entries(data.sections).forEach(([secName, secData]) => {
+                    const isUserSection = secName === section;
+                    const isAdmin = userpriv === 'SAU'|| userpriv === 'LLU';
+                    const isAcknowledged = secData.isAck === true;
+
+                    if (!isUserSection && !isAdmin) return;
+
+                    const row = document.createElement("tr");
+                    // Create status dropdown options
+                    const statusOptions = ['OPEN', 'INPROGRESS', 'COMPLETED'].map(opt => 
+                        `<option value="${opt}" ${secData.Status === opt ? 'selected' : ''}>${opt}</option>`
+                    ).join('');
+
+                    row.innerHTML = `
+                        <td>${secName}</td>
+                        <td>${secData.AssignDate || '-'}</td>
+                        <td>${secData.InitialComment || '-'}</td>
+                        <td>${isUserSection ? `<select class="form-control" data-field="isAck">
+                            <option value="true" ${secData.isAck ? 'selected' : ''}>Yes</option>
+                            <option value="false" ${!secData.isAck ? 'selected' : ''}>No</option>
+                        </select>` : (secData.isAck ? 'Yes' : 'No')}</td>
+
+                        <td>${isUserSection ? 
+                            `<select class="form-control" data-field="Status" ${!isAcknowledged ? 'disabled' : ''}>
+                                ${statusOptions}
+                            </select>` : 
+                            secData.Status || '-'}</td>
+
+
+
+
+                        
+                        
+                        <td>${isUserSection ? `<select class="form-control" data-field="isCompleted">
+                            <option value="true" ${secData.isCompleted ? 'selected' : ''}>Yes</option>
+                            <option value="false" ${!secData.isCompleted ? 'selected' : ''}>No</option>
+                        </select>` : (secData.isCompleted ? 'Yes' : 'No')}</td>
+
+                        <td>${(isAdmin && secData.isCompleted &&!secData.isVerified) ? `<select class="form-control" data-field="isVerified">
+                            <option value="true" ${secData.isVerified ? 'selected' : ''}>Yes</option>
+                            <option value="false" ${!secData.isVerified ? 'selected' : ''}>No</option>
+                        </select>` : (secData.isVerified ? 'Yes' : 'No')}</td>
+
+                        <td>${secData.CloseDate || '-'}</td>
+                        <td>${isUserSection ? `<input type="text" value="${secData.CloseComment || ''}" class="form-control" data-field="CloseComment" />` : secData.CloseComment || '-'}</td>
+                        
+                        
+                        <td>
+    ${
+        secData.isVerified
+            ? `<span style="color: green; font-weight: bold;">TASK COMPLETED</span>`
+            : (isUserSection || canEditField('isVerified')
+                ? `<button class="btn btn-success btn-sm" onclick="saveSectionEdit('${crmOrder}', '${secName}', this)">SUBMIT</button>`
+                : '')
+    }
+</td>
+
+                        
+                        
+                        
+                    `;
+
+                    sectionTableBody.appendChild(row);
+                    checkAllVerifiedAndToggleCommission(crmOrder, data.sections);
+
+                });
+            }
+
+            document.getElementById("order-details").style.display = "block";
+        } else {
+            alert("No work order found for this CRM Order number.");
+        }
+    } catch (error) {
+        console.error(error);
+        alert("Error loading work order.");
+    }
+}
+
+
+window.reassignWorkOrder = async function () { 
+    const crmOrder = localStorage.getItem("crmorder");
+    const section = document.getElementById("new-section").value;
+    const reassigncomment = document.getElementById("reassign-comment").value;
+    
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDate = `${year}-${month}-${day}`;
+    console.log(localDate);
+
+
+
+    if (!crmOrder || !section ) {
+        alert("Please fill all fields.");
+        return;
+    }
+
+    const db = getDatabase();
+    const sectionRef = ref(db, `workorders/${crmOrder}/sections/${section}`);
+
+    try {
+        const snapshot = await get(sectionRef);
+        if (snapshot.exists()) {
+            alert(`CRM Order already assigned to section: ${section}`);
+            return;
+        }
+
+        await update(sectionRef, {
+            AssignDate: localDate,
+            Status: "OPEN",
+            isAck: false,
+            isCompleted: false,
+            isVerified: false,
+            InitialComment: reassigncomment,
+            CloseComment: "",
+            CloseDate: ""
+        });
+
+        alert(`CRM Order assigned to section: ${section}`);
+        //document.getElementById("section-date").value = "";
+        document.getElementById("new-section").selectedIndex = 0;
+        loadWorkOrder();
+    } catch (error) {
+        console.error("Error reassigning:", error);
+        alert("Reassignment failed.");
+    }
+}
+
+        
+window.saveSectionEdit = async function (crmOrder, section, button) {
+    const row = button.closest('tr');
+    const inputs = row.querySelectorAll('[data-field]');
+    const updates = {};
+
+    // inputs.forEach(input => {
+    //     const field = input.getAttribute('data-field');
+    //     if (input.tagName === 'SELECT') {
+    //         updates[field] = input.value === "true";
+    //     } else {
+    //         updates[field] = input.value.trim();
+    //     }
+    // });
+
+
+
+    inputs.forEach(input => {
+        const field = input.getAttribute('data-field');
+
+        if (input.tagName === 'SELECT') {
+            // Handle booleans for specific fields
+            if (field === 'isAck' || field === 'isCompleted' || field === 'isVerified') {
+                updates[field] = input.value === "true";
+            } else {
+                // Save Status as string
+                updates[field] = input.value;
+            }
+        } else {
+            updates[field] = input.value.trim();
+        }
+    });
+
+
+    // Add/Update CloseDate if isCompleted or isVerified is true
+    if (updates.isCompleted || updates.isVerified) {
+        updates.CloseDate = localDate();
+    }
+
+    try {
+        const sectionRef = ref(db, `workorders/${crmOrder}/sections/${section}`);
+        await update(sectionRef, updates);
+        Swal.fire("Success", "Section updated successfully.", "success");
+        loadWorkOrder(); // Reload updated view
+    } catch (err) {
+        console.error(err);
+        Swal.fire("Error", "Failed to update section.", "error");
+    }
+}
+
+        
+
+
+    </script>
+</body>
+</html>

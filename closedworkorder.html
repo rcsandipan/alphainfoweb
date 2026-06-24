@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Closed Work Orders</title>
+  <script type="module" src="scrollingMessage.js"></script>
+  <link rel="stylesheet" href="styles.css"/>
+
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+
+<style>
+  a {
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+  }
+  .main-content {
+    position: relative;
+    top: 25px;
+  }
+</style>
+
+<body>
+  <div class="sidebar" id="sidebar" style="top: 40px;">
+    <button class="close-btn" id="close-btn">&times;</button>
+    <ul class="menu">
+      <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+    <table class="table table-bordered" id="closedworkorder-table">
+      <thead>
+        <tr>
+          <th>CRM Order No</th>
+          <th>Order Date</th>
+          <th>LC ID</th>
+          <th>Customer</th>
+          <th>Address</th>
+          <th>Order Type</th>
+          <th>Circuit Type</th>
+          <th>Priority</th>
+          <th>Commissioned</th>
+          <th>Commission Date</th>
+        </tr>
+      </thead>
+      <tbody id="closedworkorder-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+  </div>
+    <script src="script.js"></script>
+  <script type="module">
+    import { app } from "./firebase-config.js";
+    import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const db = getDatabase(app);
+    const currentuser = localStorage.getItem("currentuser");
+    const userRole = localStorage.getItem("userpriv");
+
+    const closedRef = ref(db, 'closedworkorders');
+    onValue(closedRef, (snapshot) => {
+      const orders = snapshot.val();
+      const tbody = document.getElementById("closedworkorder-body");
+      tbody.innerHTML = "";
+
+      for (let key in orders) {
+        const order = orders[key];
+        const row = document.createElement("tr");
+        const crmorder = order.CRMOrder;
+
+        row.innerHTML = `
+          <td> <span>${order.CRMOrder}</span> <br>
+               <span 
+              class="orderview" 
+              data-crm="${order.CRMOrder}"
+              style="color:blue; font-style:italic; cursor:pointer; text-decoration:underline;"
+            >details</span>
+            </td>
+          <td>${order.OrderDate || ''}</td>
+          <td>${order.LCID || ''}</td>
+          <td>${order.Customer || ''}</td>
+          <td>${order.Address || ''}</td>
+          <td>${order.OrderType || ''}</td>
+          <td>${order.ServiceType || ''}</td>
+          <td>${order.Priority || ''}</td>
+          <td>${order.isCommission ? "Yes" : "No"}</td>
+          <td>${order.CommissionDate || ''}</td>
+        `;
+        tbody.appendChild(row);
+            document.getElementById("closedworkorder-body").addEventListener("click", function (e) {
+        if (e.target && e.target.classList.contains("orderview")) {
+            const crmorder = e.target.getAttribute("data-crm");
+            localStorage.setItem("crmorder", crmorder);
+            window.location.href = "findclosedworkorder.html";
+        }
+        });
+      }
+    });
+  </script>
+</body>
+</html>
+

@@ -1,0 +1,1020 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Docket</title>
+    <link rel="stylesheet" href="styles.css"> 
+   
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+/* #userbuttonset2{
+    display: flex;
+    justify-content: space-evenly;
+} */
+#btnset2{
+    margin-left: 300px;
+}
+
+
+</style>
+
+<body>
+    <div>
+        <div class="sidebar" id="sidebar">
+            <button class="close-btn" id="close-btn">&times;</button>
+            <ul class="menu">
+              
+                <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+                <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+                <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Prabalplus</a></li>
+                <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+                <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+                <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+                <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+                <li id="myprov"><a href="myprovision.html">My Pending Provision</a></li>
+                <li id="report"><a href="report.html">Report</a></li>
+                <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+                <li id="logout"><a href = "logOut.html">LogOut</a></li>
+              
+            </ul>
+          </div>
+        
+    </div>
+
+    <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button> <br><br>
+        <!-- <div id="userbuttonset2">
+            <div>
+                Total Fault Count: <b id="searchcount"></b>
+                
+                
+            </div>
+            <div id="btnset1" style="display: flex; justify-content: space-evenly;">
+                <div><button id="btn_refresh" class="btn btn-default" >SYNC WITH PRABALPLUS</button> </div>
+                <div><button id="btn_create" class="btn btn-success" > CREATE DOCKET</button>  </div>
+                <div><input class="input" id="input1" type="text" placeholder="Search" ></div>
+                <div><button id="btn_export" class="btn btn-default" > EXPORT TO EXCEL</button> </div>
+                
+            </div>
+           
+        
+           
+    
+        </div> <br> -->
+        <div id="userinputdiv">
+            <input id="lcidinput" type="number" placeholder="Enter Circuit ID">
+            <button id="findbutton" > FIND </button>
+        </div>
+        <br>
+       
+    
+        <!-- <div class="container" >
+            <table id= "lctable"class="table table-bordered">
+                <thead id="thead">
+                    <th> SL</th>
+                     <th>LC ID</th>
+                    <th>PRABAL DOCKET ID</th>
+                    <th>CUSTOMER NAME</th>
+                    <th>CIRCUIT TYPE</th>
+                                
+                    <th> ADDRESS</th>
+                    <th> DOCKET TIME</th>
+                    <th> PRIORITY</th>
+                    <th> STATUS</th>
+                    <th> ACTION</th>
+                    
+                                 
+                </thead>
+               
+                <tbody id="tbody1"></tbody>
+              
+                 
+                
+            </table>
+            </div> -->
+            
+            <!-- <div class="container" >
+            
+            <table id="assigntable" class="table table-bordered">
+                <thead id="thead2">
+                    
+                        <th>LC ID </th>
+                        <th>PRABAL DOCKET ID </th>
+                        <th>CUSTOMER </th>
+                        <th>CIRCUIT TYPE </th>
+                        <th> ADDRESS</th>
+                        <th>FAULT TYPE </th>
+                        <th>ASSIGNED TO </th>
+                        <th>COMMENT </th>
+                        <th>ACTION </th>
+                    
+                 </thead>
+                 <tbody id="tbody2"></tbody>
+            </table>
+          </div> -->
+            
+         <div class="container">
+            <table id="resulttable" class= "table table-bordered">
+                <thead id="thead3">
+                    <th>LC ID</th>
+                    <th>CUSTOMER</th>
+                    <th>ADDRESS</th>
+                    <th>LC TYPE</th>
+                    <th>BANDWIDTH</th>
+                    <th>MEDIA</th>
+                    <th>FAULT TYPE</th>
+                    <th>ONU/CONVERTER STATUS</th>
+                    <th>COMMENT</th>
+                    <th>ACTION</th>
+    
+                </thead>
+                <tbody id="tbody3"></tbody>
+            </table>
+        </div>
+    </div>
+
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+    
+    <script type="module">
+        var prabalid;
+        var prabalidlist=[];
+        var statusflag, assignflag, finalcomment;
+        import { app} from "./firebase-config.js";  
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
+  
+        import { getDatabase, ref, child, onValue, get, set, update} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        const db = getDatabase();
+
+
+
+        var slno = 0;
+        const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+       
+
+        if(userpriv == "LLU" || userpriv == "SAU")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+            }
+        
+        var thead = document.getElementById("thead");
+        var thead2 = document.getElementById("thead2");
+        var thead3 = document.getElementById("thead3");
+        var tbody = document.getElementById("tbody1");
+        var tbody2 = document.getElementById("tbody2");
+        var tbody3 = document.getElementById("tbody3");
+        var resulttable = document.getElementById("resulttable");
+        var assigntable = document.getElementById('assigntable');
+        let prabalfilter = document.getElementById("input1");
+        
+        document.getElementById('userinputdiv').style.display ="none";
+       
+        resulttable.style.display ="none";
+        //assigntable.style.display ="none";
+        
+        var searchcount = document.getElementById('searchcount');
+        var flag;
+
+           
+            document.getElementById('userinputdiv').style.display ="block";
+            //document.getElementById('lctable').style.display = "none";
+           // assigntable.style.display = "none";
+            //document.getElementById('userbuttonset2').style.display = "none";
+           
+            var findbutton = document.getElementById('findbutton');   
+            findbutton.style.className = "btn btn-default";
+                
+               
+                findbutton.onclick = function()
+                {
+                findbutton.style.display = "none";
+                var lcid = document.getElementById('lcidinput').value;
+                document.getElementById('lcidinput').style.display = "none";
+                console.log(lcid);
+                resulttable.style.display ="block";
+                // 
+            
+                //let thead2 = document.createElement('thead');
+                let trow = document.createElement('tr');
+                
+				
+                let td1= document.createElement('td');
+                let td2= document.createElement('td');
+                let td3= document.createElement('td');
+                let td4= document.createElement('td');
+                let td5= document.createElement('td');
+                let td6= document.createElement('td');
+                let td7= document.createElement('td');
+                let faultselect= document.createElement('select');
+                faultselect.style.width = "150px";
+
+                const faultoptions = [
+                { value: 'LINK DOWN', text: 'LINK DOWN' },
+                { value: 'LINK FLAPPING', text: 'LINK FLAPPING' },
+                { value: 'PING OK BUT CIRCUIT NOT WORKING', text: 'PING OK BUT CIRCUIT NOT WORKING' },
+                { value: 'HIGH LATENCY', text: 'HIGH LATENCY' },
+                { value: 'SPEED LOW', text: 'SPEED LOW'                 
+                 },
+                 {value: 'PING OK BUT BANK CANNOT WORK', text: 'PING OK BUT BANK CANNOT WORK'}
+                ];
+
+                // Add options to the select element
+                faultoptions.forEach(option => {
+                const optionElement1 = document.createElement('option');
+                optionElement1.value = option.value;
+                optionElement1.text = option.text;
+                faultselect.appendChild(optionElement1);
+                });
+                td7.append(faultselect);
+
+                let td8= document.createElement('td');
+                let statusselect= document.createElement('select');
+                statusselect.style.width = "150px";
+                const statusoptions = [
+                { value: 'PON OK IN ONU', text: 'PON OK IN ONU' },
+                { value: 'PON RED IN ONU', text: 'PON RED IN ONU' },
+                { value: '6 LED GLOWING IN CONVERTER', text: '6 LED GLOWING IN CONVERTER' },
+                { value: '4 LED GLOWING IN CONVERTER', text: '4 LED GLOWING IN CONVERTER' },
+                { value: 'NO LED IS GLOWING IN CONVERTER', text: 'NO LED IS GLOWING IN CONVERTER'                 
+                 },
+                 {value: 'ONU LAN LED NOT GLOWING', text: 'ONU LAN LED NOT GLOWING'},
+                 {value: 'PON/REG LED NOT GLOWING', text: 'PON/REG LED NOT GLOWING'}
+                ];
+
+                // Add options to the select element
+                statusoptions.forEach(option => {
+                const optionElement2 = document.createElement('option');
+                optionElement2.value = option.value;
+                optionElement2.text = option.text;
+                statusselect.appendChild(optionElement2);
+                });
+                td8.append(statusselect);
+
+
+
+                let td9= document.createElement('td');
+                let customercomment = document.createElement('input');
+                td9.append(customercomment);
+                let td10= document.createElement('td');
+
+                let button = document.createElement('button');
+                button.className = "btn btn-success";
+                
+                td1.innerHTML = lcid;
+                
+                button.innerText = "CREATE";
+                td10.append(button);
+                
+
+                button.style.width = "80px";
+                button.style.marginLeft = "10px";
+                button.style.marginTop = "10px";
+
+
+                const dbref = ref(db);
+                var customer, address, servicetype;
+
+                get(child(dbref,"trplccxnlist/"+lcid)).then((snapshot)=>{
+                   
+                    td2.innerHTML = snapshot.val().customer;
+                    td3.innerHTML = snapshot.val().address;
+                    td4.innerHTML = snapshot.val().ckttype;
+                    td5.innerHTML = snapshot.val().bw;
+                    td6.innerHTML = snapshot.val().media;
+                    customer = snapshot.val().customer;
+                    address = snapshot.val().address;
+                    servicetype = snapshot.val().ckttype;
+                
+                });
+                trow.appendChild(td1);
+                trow.appendChild(td2);
+                trow.appendChild(td3);
+                trow.appendChild(td4);
+                trow.appendChild(td5);
+                trow.appendChild(td6);
+                trow.appendChild(td7);
+                //tbody3.appendChild(thead2);
+                trow.appendChild(td8);
+                trow.appendChild(td9);
+                trow.appendChild(td10);
+                tbody3.appendChild(trow);
+                
+                button.onclick = function(){
+
+                var date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const localDate = year + month +day ;
+                const time = date.toTimeString();
+                // let x = Math.floor((Math.random() * 100) + 11);
+                const LDate = year +"-"+ month +"-"+day ;
+                let truncatedDate = localDate.substring(2); 
+                const localTime = time.split(' ')[0];
+                const hr = (date.getHours()).toString();
+                const min = (date.getMinutes()).toString();
+                const sec= (date.getSeconds()).toString();
+
+                var docket = "CR"+truncatedDate+hr+min+sec;
+                //console.log(docket);
+
+                set(ref(db,"customerlcfaultlist/"+docket+"/"),
+                {
+                    Customer: customer,
+                    LCID: lcid,
+                    PrabalDocketID: docket,
+                    ServiceType: servicetype,
+                    Address: address,
+                    OpenTime: LDate +" "+ localTime,
+                    Priority: "C",
+                    Status: "INPROGRESS",
+                    FaultType: faultselect.value,
+                    Observation: statusselect.value
+                    
+                    
+                                        
+                }).then(()=>{
+                    alert("Docket ID: "+docket+" is created sucessfully !");
+                    location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+
+
+
+                }
+
+
+
+
+
+
+                }
+
+
+
+
+        
+
+
+        function AddDataToTable(LCID,PrabalDocketID,Customer,ServiceType,Address,OpenTime,Priority,SourceDocketID,BookedIn,Status){
+            let trow= document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let td7 = document.createElement('td');
+            let td8 = document.createElement('td');
+            let td9 = document.createElement('td');
+            let td10 = document.createElement('td');
+
+            let assgbtn = document.createElement('button');
+           //let delbtn = document.createElement('button');
+            assgbtn.innerText ="ASSIGN";
+            assgbtn.className ="btn btn-default";
+            // delbtn.className ="btn btn-danger";
+            // delbtn.innerText ="DELETE";
+            td10.append(assgbtn);
+
+           
+
+
+            
+            //td10.style.display = "none";
+            //assgbtn.style.display = "none";
+
+            if(currentuser){
+                    if (userpriv == "SAU" || userpriv == "LLU"){
+                        document.getElementById('btn_create').style.display ="block";
+                        document.getElementById('btn_refresh').style.display ="block";
+       
+                        //document.getElementById('thaction').style.display ="block";
+                        //td10.style.display = "block";
+                        //assgbtn.style.display ="block";
+                    }
+                }
+
+            
+            td1.innerHTML = ++slno;
+            td2.innerHTML = LCID;
+            td3.innerHTML = PrabalDocketID;
+            td4.innerHTML = Customer;
+            
+            td5.innerHTML = ServiceType;
+            td6.innerHTML = Address;
+            
+            td7.innerHTML = OpenTime;
+            td8.innerHTML = Priority;
+            td9.innerHTML = Status;
+
+            if(td9.innerHTML == "RESOLVED") {
+                
+                assgbtn.style.display = "none";
+            }
+            td9.style.color = "red";
+            td9.style.fontWeight ="bold";
+            //td9.style.marginLeft = "20px";
+            
+            // assgbtn.style.marginTop = "20px";
+            // assgbtn.style.marginBottom = "auto";
+             assgbtn.className = "btn btn-default";
+             
+             assgbtn.style.cursor ="pointer";
+            prabalid = PrabalDocketID;
+            
+            //td10.styte.display = "none";
+            if(Status == "ASSIGNED" || Status == "RESOLVED" )
+            {
+                
+                td9.style.color = "green";
+                //td10.innerHTML = "ASSIGNED";
+                //td10.style.display = "none";
+            }
+
+
+            assgbtn.onclick = function(){
+                assigntable.style.display ="block";
+                //let thead2 = document.createElement('thead');
+                // tbody2.style.display ="block";
+                // thead2.style.display ="block";
+                document.getElementById('btn_export').style.display ="none";
+                document.getElementById('btn_refresh').style.display ="none";
+                document.getElementById('lctable').style.display = "none";
+                
+                thead.style.display ="none";
+                tbody.style.display = "none";
+                
+                let trow1= document.createElement("tr");
+
+                let td1_1 = document.createElement('td');
+                let td2_1 = document.createElement('td');
+                let td3_1 = document.createElement('td');
+                let td4_1 = document.createElement('td');
+                let td5_1 = document.createElement('td');
+                let td6_1 = document.createElement('td');
+                let td7_1 = document.createElement('td');
+                let td8_1 = document.createElement('td');
+                let td9_1 = document.createElement('td');
+
+                let submitbtn = document.createElement('button');
+				
+                td9_1.append(submitbtn);
+
+
+				
+                let faultopt1 = document.createElement('option');
+                let faultopt1_1 = document.createElement('option');
+                let faultopt1_2 = document.createElement('option');
+                let faultopt1_3 = document.createElement('option');
+                let faultopt2 = document.createElement('option');
+                let faultopt3 = document.createElement('option');
+                let faultopt4 = document.createElement('option');
+                let faultopt5 = document.createElement('option');
+                let faultopt6 = document.createElement('option');
+                let faultopt7 = document.createElement('option');
+                let faultopt8 = document.createElement('option');
+                let faultopt9 = document.createElement('option');
+                let faultopt10 = document.createElement('option');
+                let faultopt11= document.createElement('option');
+                let faultopt12 = document.createElement('option');
+                let faultopt13 = document.createElement('option');
+                let faultopt14 = document.createElement('option');
+                let faultopt15 = document.createElement('option');
+                let faultopt16 = document.createElement('option');
+                let faultopt17 = document.createElement('option');
+                let faultopt18 = document.createElement('option');
+                faultopt1.innerHTML = "Fault Restored";
+                faultopt1_1.innerHTML = "Link down";
+                faultopt1_2.innerHTML = "ONU faulty";
+                faultopt1_3.innerHTML = "ONU OFFLINE";
+                faultopt2.innerHTML = "ONU side MAC ok but Link down";
+                faultopt3.innerHTML = "ONU MAC not reflecting in OLT";
+                faultopt4.innerHTML = "PE router MAC not reflecting in OLT-- Uplink issue";
+                faultopt5.innerHTML = "OFC Route failure";
+                faultopt6.innerHTML = "OFC Ring route Fault";
+                faultopt7.innerHTML = "Link Flapping";
+                faultopt8.innerHTML = "High Latency";
+                faultopt9.innerHTML = "OCPAN path failure";
+                faultopt10.innerHTML = "MAAN issue";
+                faultopt11.innerHTML = "Transmission system fault";
+                faultopt12.innerHTML = "ONU power level low";
+                faultopt13.innerHTML = "Last mile OFC break-TIP media break";
+                faultopt14.innerHTML = "Customer didn't share converter/ONU status-Reason not conformed";
+                faultopt15.innerHTML = "Router port Fault";
+                faultopt16.innerHTML = "Transmission system down due to power plant failure";
+                faultopt17.innerHTML = "AC/DC power adapter faulty";
+                faultopt18.innerHTML = "RF/Minilink Issue";
+                
+                let td6select = document.createElement('select');
+                td6select.style.width ="100px"
+                td6_1.append(td6select);
+            
+                td6select.append(faultopt1);
+                td6select.append(faultopt1_1);
+                td6select.append(faultopt1_2);
+                td6select.append(faultopt1_3);
+                td6select.append(faultopt2);
+                td6select.append(faultopt3);
+                td6select.append(faultopt4);
+                td6select.append(faultopt5);
+                td6select.append(faultopt6);
+                td6select.append(faultopt7);
+                td6select.append(faultopt8);
+                td6select.append(faultopt9);
+                td6select.append(faultopt10);
+                td6select.append(faultopt11);
+                td6select.append(faultopt12);
+                td6select.append(faultopt13);
+                td6select.append(faultopt14);
+                td6select.append(faultopt15);
+                td6select.append(faultopt16);
+                td6select.append(faultopt17);
+                td6select.append(faultopt18);
+
+                let assignopt1 = document.createElement('option');
+                let assignopt1_1 = document.createElement('option');
+                let assignopt2 = document.createElement('option');
+                let assignopt3 = document.createElement('option');
+                let assignopt4 = document.createElement('option');
+                let assignopt5 = document.createElement('option');
+                let assignopt6 = document.createElement('option');
+                let assignopt7 = document.createElement('option');
+                let assignopt8 = document.createElement('option');
+                let assignopt9 = document.createElement('option');
+                let assignopt10 = document.createElement('option');
+                let assignopt11 = document.createElement('option');
+                let assignopt12 = document.createElement('option');
+                let assignopt13 = document.createElement('option');
+                let assignopt14 = document.createElement('option');
+                let assignopt15 = document.createElement('option');
+                let assignopt16 = document.createElement('option');
+                let assignopt17 = document.createElement('option');
+
+                assignopt1.innerHTML = "LeasedLine";
+                assignopt1_1.innerHTML = "FinalSubmission";
+                assignopt2.innerHTML = "NIB";
+                assignopt3.innerHTML = "CNTx-NER";
+                assignopt4.innerHTML = "Tx-West";
+                assignopt5.innerHTML = "Tx-South";
+                assignopt6.innerHTML = "Tx-North";
+                assignopt7.innerHTML = "BBM-AGT";
+                assignopt8.innerHTML = "BBM-GB";
+                assignopt9.innerHTML = "BBM-Khowai";
+                assignopt10.innerHTML = "BBM-Dhalai";
+                assignopt11.innerHTML = "BBM-Unakoti";
+                assignopt12.innerHTML = "BBM-North";
+                assignopt13.innerHTML = "BBM-Bishalgarh";
+                assignopt14.innerHTML = "BBM-Sonamura";
+                assignopt15.innerHTML = "BBM-Gomati";
+                assignopt16.innerHTML = "BBM-South";
+                assignopt17.innerHTML = "CM-Maintenance";
+                let td7select = document.createElement('select');
+                td7_1.append(td7select);
+                //td7_1.innerHTML = '<select id="td7select">';
+                td7select.append(assignopt1);
+                td7select.append(assignopt1_1);
+                td7select.append(assignopt2);
+                td7select.append(assignopt3);
+                td7select.append(assignopt4);
+                td7select.append(assignopt5);
+                td7select.append(assignopt6);
+                td7select.append(assignopt7);
+                td7select.append(assignopt8);
+                td7select.append(assignopt9);
+                td7select.append(assignopt10);
+                td7select.append(assignopt11);
+                td7select.append(assignopt12);
+                td7select.append(assignopt13);
+                td7select.append(assignopt14);
+                td7select.append(assignopt15);
+                td7select.append(assignopt16);
+                td7select.append(assignopt17);
+                td7select.style.width = "100px";
+                
+                let td8input = document.createElement('input');
+                td8input.style.width ="100px";
+                td8_1.append(td8input);
+                
+                submitbtn.innerText ="SUBMIT";
+                //submitbtn.style.marginTop ="20px";
+                submitbtn.className ="btn btn-success";
+
+                    // statusflag = "OPEN";
+                    // finalcomment = td8input.value;
+                    // assignflag =  "ASSIGNED";
+
+        
+
+                submitbtn.onclick= function(){
+                    if (td7select.value == "FinalSubmission") {
+                    statusflag = "RESOLVED";
+                    finalcomment = "Docket Closed";
+                    assignflag = "RESOLVED";
+                } else {
+                    statusflag = "OPEN";
+                    finalcomment = td8input.value;
+                    assignflag = "ASSIGNED";
+                }
+                    var date = new Date();
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const localDate = year +"-"+ month +"-"+day ;
+                    const time = date.toTimeString();
+                    const localTime = time.split(' ')[0];
+                    var eventid = 1;
+                    const dbref = ref(db);
+
+                    set(ref(db,"lcfaultrecords/"+PrabalDocketID+"/"),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    ServiceType: ServiceType,
+                    assignedto_workgroup:td7select.value,
+                    Priority: Priority,
+                    OpenTime: OpenTime,
+                    Status: statusflag,
+                    AssignDate: localDate,
+                    AssignTime: localTime,
+                    FaultType:td6select.value,
+                    assignedby_workgroup:"LeasedLine",
+                    Comment: "LeasedLine"+finalcomment,
+                    event_ID: String(eventid)
+                    
+                }).then(()=>{
+
+                   
+                    
+                    // alert("Docket assigned sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+            
+            
+
+
+            set(ref(db,"prabalidrecords/"+PrabalDocketID+"/"+eventid+"/"),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    ServiceType: ServiceType,
+                    event_ID: String(eventid),
+                    assignedto_workgroup:td7select.value,
+                    Priority: Priority,
+                    Status: statusflag,
+                    AssignDate: localDate,
+                    AssignTime: localTime,
+                    FaultType:td6select.value,
+                    assignedby_workgroup:"LeasedLine",
+                    Comment: finalcomment
+                    
+                }).then(()=>{
+
+                   
+            update(ref(db,"trplcfaultlist"+"/"+ PrabalDocketID),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    Priority: Priority,
+                    Status: assignflag,
+                    ServiceType:ServiceType,
+                    OpenTime: OpenTime,
+                    RFP: td6select.value
+                    // RFO:"NA",
+                    // BookedIn: BookedIn,
+                    // SourceDocketID: SourceDocketID
+              
+                }).then(()=>{
+                     alert("Data Updated sucessfully");
+                     location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+                    
+                    // alert("Docket assigned sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+
+
+
+
+                }
+
+     
+                td1_1.innerHTML = LCID;
+                td2_1.innerHTML = PrabalDocketID;
+                td3_1.innerHTML = Customer;
+                td4_1.innerHTML = ServiceType;
+                td5_1.innerHTML = Address;
+               
+                trow1.appendChild(td1_1);
+                trow1.appendChild(td2_1);
+                trow1.appendChild(td3_1);
+                trow1.appendChild(td4_1);
+                trow1.appendChild(td5_1);
+                trow1.appendChild(td6_1);
+                trow1.appendChild(td7_1);
+                trow1.appendChild(td8_1);
+                trow1.appendChild(td9_1);
+
+                tbody2.appendChild(trow1);
+
+            }
+        
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+            trow.appendChild(td7);
+            trow.appendChild(td8);
+            trow.appendChild(td9);
+            trow.appendChild(td10);
+            // trow.appendChild(td11);
+
+            tbody.appendChild(trow);
+           // thead.appendChild(tbody);
+
+
+        }
+        function AddAllItemsToTable(praballist){
+            slno = 0;
+            tbody.innerHTML = "";
+            praballist.forEach(element => {
+                AddDataToTable(element.LCID,element.PrabalDocketID,element.Customer,element.ServiceType,element.Address,element.OpenTime,element.Priority,element.SourceDocketID,element.BookedIn,element.Status);
+            });
+
+        }
+
+        
+
+       
+            function GetAllDataOnce(){
+            const dbref = ref(db);
+
+            get(child(dbref,"trplcfaultlist")).then((snapshot)=>{
+                var praballist=[];
+                
+                
+                snapshot.forEach(childSnapshot => {
+                    //flag = childSnapshot.val().Status;
+                    praballist.push(childSnapshot.val());
+                    prabalidlist.push(childSnapshot.val().PrabalDocketID);
+                    // console.log(prabalidlist);
+
+                });
+                praballist
+                praballist.sort((b1, b2) => 
+                    (new Date(b1.OpenTime) < new Date(b2.OpenTime)) ? 1 : (new Date(b1.OpenTime) > new Date(b2.OpenTime)) ? -1 : 0);
+                
+                AddAllItemsToTable(praballist);
+                searchcount.innerText = slno;
+               
+            });
+            
+        } 
+        window.onload = GetAllDataOnce();
+
+     
+        document.getElementById("btn_refresh").style.cursor = "pointer";
+        document.getElementById("btn_refresh").onclick = function(){
+            const usersRef = ref(db, "prabalidrecords"); 
+
+                const q = query(usersRef, orderByChild("PrabalDocketID"), equalTo(lcid));
+                get(q).then((snapshot) => {
+                if (snapshot.exists()) {
+                   alert("Docket is pending against this circuit");
+
+                } else{}
+            });
+
+
+
+            if(prabalidlist.length !=0)
+        {
+            for(var i=0;i<prabalidlist.length;i++)
+           
+            {
+            //console.log(prabalidlist[i]);
+            
+            const dbref = ref(db);
+
+            get(child(dbref,"prabalpluslive")).then((snapshot)=>{
+                
+                
+                snapshot.forEach(childSnapshot => {
+                    var date = new Date(childSnapshot.val().OpenTime);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const localDate = year +"-"+ month +"-"+day ;
+                    const time = date.toTimeString();
+                    const localTime = time.split(' ')[0];
+                    var faultDateTime = localDate+" "+localTime;
+                    //var cktid = toString(childSnapshot.val().LCID);
+
+                    const usersRef = ref(db, "prabalidrecords"); 
+
+                    const q = query(usersRef, orderByChild("PrabalDocketID"), equalTo(childSnapshot.val().PrabalDocketID));
+                    get(q).then((docket) => {
+                    if (docket.exists()) {
+                    alert("Few Dockets are already cleared");
+
+                    } 
+                    });
+
+                    
+                    if((childSnapshot.val().PrabalDocketID).localeCompare(prabalidlist[i]) !=0 && !docket.exists())
+                    {
+                        //console.log((childSnapshot.val().PrabalDocketID).localeCompare(prabalidlist[i]));
+                        set(ref(db,"trplcfaultlist/"+childSnapshot.val().PrabalDocketID+"/"),
+                {
+                    Customer: childSnapshot.val().Customer,
+                    LCID: childSnapshot.val().LCID,
+                    PrabalDocketID: childSnapshot.val().PrabalDocketID,
+                    ServiceType: childSnapshot.val().ServiceType,
+                    Address: childSnapshot.val().Address,
+                    OpenTime: faultDateTime,
+                    Priority: childSnapshot.val().Priority,
+                    Status: childSnapshot.val().Status,
+                    SourceDocketID: childSnapshot.val().SourceDocketID,
+                    BookedIn: childSnapshot.val().BookedIn
+                    
+                    
+                                        
+                }).then(()=>{
+                    // alert("Docket synced sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+                    }
+
+                 
+                });
+                alert("Docket synced sucessfully !");
+                location.reload();
+            });
+
+            GetAllDataOnce();
+            
+
+
+            }
+        }
+
+        else{
+            const dbref = ref(db);
+            get(child(dbref,"prabalpluslive")).then((snapshot)=>{
+                
+                
+                snapshot.forEach(childSnapshot => {
+                    var date = new Date(childSnapshot.val().OpenTime);
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const localDate = year +"-"+ month +"-"+day ;
+                    const time = date.toTimeString();
+                    const localTime = time.split(' ')[0];
+                    var faultDateTime = localDate+" "+localTime;
+
+            set(ref(db,"trplcfaultlist/"+childSnapshot.val().PrabalDocketID+"/"),
+                {
+                    Customer: childSnapshot.val().Customer,
+                    LCID: childSnapshot.val().LCID,
+                    PrabalDocketID: childSnapshot.val().PrabalDocketID,
+                    ServiceType: childSnapshot.val().ServiceType,
+                    Address: childSnapshot.val().Address,
+                    OpenTime: faultDateTime,
+                    Priority: childSnapshot.val().Priority,
+                    Status: childSnapshot.val().Status,
+                    SourceDocketID: childSnapshot.val().SourceDocketID,
+                    BookedIn: childSnapshot.val().BookedIn
+                    
+                    
+                                        
+                }).then(()=>{
+                    // alert("Docket synced sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+        });
+        alert("Docket synced sucessfully !");
+                location.reload();
+    });
+
+
+        }
+           
+            
+        }
+
+        
+
+        prabalfilter.addEventListener('keyup', function(){
+            let searchitem = prabalfilter.value.toUpperCase();
+            
+            console.log(searchitem);
+
+            const dbref = ref(db);
+            get(child(dbref,"trplcfaultlist")).then((snapshot)=>{
+                var filteredprabal=[];
+                snapshot.forEach(childSnapshot => {
+
+                                       
+            if(childSnapshot.val().LCID.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().PrabalDocketID.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().Customer.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().Address.toUpperCase().indexOf(searchitem) > -1 
+            || childSnapshot.val().OpenTime.toUpperCase().indexOf(searchitem) > -1){
+                     filteredprabal.push(childSnapshot.val());
+                     }
+                    
+                   
+                                  
+                    
+                   
+                });
+                AddAllItemsToTable(filteredprabal);
+                searchcount.innerText = slno;
+                
+            if (searchitem == ""){
+                GetAllDataOnce();
+                    }
+                });
+
+
+
+                  });
+
+
+         var btn_export = document.getElementById('btn_export');
+         //btn_export.style.marginLeft = "300px";
+         btn_export.style.cursor = "pointer";
+         btn_export.addEventListener('click',exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+           
+         $('#lctable').table2excel({
+ 		exclude: ".no-export",
+ 		filename: "download.xls",
+ 		fileext: ".xls",
+ 		exclude_links: true,
+ 		exclude_inputs: true
+ 	});
+}
+
+      
+
+        
+
+
+    </script>
+</body>
+</html>

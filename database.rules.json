@@ -1,0 +1,19 @@
+{
+  "rules": {
+    ".read": "true",
+    ".write": "true",
+   
+     "trplcfaultlist": {
+      ".indexOn": "LCID"
+    },
+    
+    "lcfaultrecords": {
+      ".indexOn": "assignedto_workgroup"
+    }
+    
+    
+  }
+   
+  
+}
+

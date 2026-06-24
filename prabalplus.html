@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prabal Plus</title>
+    <link rel="stylesheet" href="styles.css"> 
+   
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    
+</head>
+<style>
+    
+.loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+/* #userbuttonset2{
+    display: flex;
+    justify-content: space-evenly;
+} */
+#btnset2{
+    margin-left: 300px;
+}
+
+
+</style>
+
+<body>
+    <div class="loader-container" id="loader"></div>
+    <div>
+        <div class="sidebar" id="sidebar">
+            <button class="close-btn" id="close-btn">&times;</button>
+            <ul class="menu">
+              
+                <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+                <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+                <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+                <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+                <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+                <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+                <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+                <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+                <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+                <li id="report"><a href="report.html">Report</a></li>
+                <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+                <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+                <li id="logout"><a href = "logOut.html">LogOut</a></li>
+              
+            </ul>
+          </div>
+        
+    </div>
+
+    <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button> <br><br>
+        <div id="userbuttonset2">
+            <div>
+                Total Fault Count: <b id="searchcount"></b>
+                
+                
+            </div>
+            <div id="btnset1" style="display: flex; justify-content: space-evenly;">
+                <div><button id="btn_refresh" class="btn btn-default" >SYNC WITH PRABALPLUS</button> </div>
+                <div><button id="btn_create" class="btn btn-success" > UPLOAD DOCKET</button>  </div>
+                <div><button id="btn_prabalpluslive" class="btn btn-default" > PRABALPLUS DOCKETS</button>  </div>
+                <div><input class="input" id="input1" type="text" placeholder="Search" ></div>
+                <div><button id="btn_export" class="btn btn-default" > EXPORT TO EXCEL</button> </div>
+                
+            </div>
+           
+        
+           
+    
+        </div> <br>
+        <div id="userinputdiv">
+            <input id="lcidinput" type="number" placeholder="Enter Circuit ID" >
+            <button id="findbutton" class="btn btn-default" > FIND </button>
+        </div>
+        <br>
+       
+    
+        <div class="container" >
+            <table id= "lctable"class="table table-bordered">
+                <thead id="thead">
+                    <th> SL</th>
+                     <th>LC ID</th>
+                    <th>PRABAL DOCKET ID</th>
+                    <th>CUSTOMER NAME</th>
+                    <th>CIRCUIT TYPE</th>
+                                
+                    <th> ADDRESS</th>
+                    <th> DOCKET TIME</th>
+                    <th> PRIORITY</th>
+                    <th> STATUS</th>
+                    <th> ACTION</th>
+                    
+                                 
+                </thead>
+               
+                <tbody id="tbody1"></tbody>
+                <!-- <tbody id="tbody2"></tbody> -->
+                 
+                
+            </table>
+            </div>
+            <div class="container" >
+            
+            <table id="assigntable" class="table table-bordered" style="width: fit-content;">
+                <thead id="thead2">
+                    
+                        <th>LC ID </th>
+                        <th>PRABAL DOCKET ID </th>
+                        <th>CUSTOMER </th>
+                        <th>CIRCUIT TYPE </th>
+                        <th> ADDRESS</th>
+                        <th>FAULT TYPE </th>
+                        <th>PRIORIRY </th>
+                        <th>ASSIGNED TO </th>
+                        <th>COMMENT </th>
+                        <th>ACTION </th>
+                    
+                 </thead>
+                 <tbody id="tbody2"></tbody>
+            </table>
+          </div>
+            
+         <div class="container">
+            <table id="resulttable" class= "table table-bordered">
+                <thead id="thead3">
+                    <th>LC ID</th>
+                    <th>CUSTOMER</th>
+                    <th>ADDRESS</th>
+                    <th>LC TYPE</th>
+                    <th>BANDWIDTH</th>
+                    <th>MEDIA</th>
+                    <th>ACTION</th>
+    
+                </thead>
+                <tbody id="tbody3"></tbody>
+            </table>
+        </div>
+    </div>
+
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script src="script.js"></script>
+    
+    <script type="module">
+
+    function getWithExpiry(key) {
+    try {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      
+      const item = JSON.parse(itemStr);
+      
+      // Check if it's the old format (just a string user ID)
+      if (typeof item === 'string') {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      const now = new Date();
+      
+      if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      return item.value;
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+      localStorage.removeItem(key); // Clear corrupted data
+      return null;
+    }
+  }
+
+  const currentuser = getWithExpiry("currentuser");
+
+  if (!currentuser) {
+    window.location.href = "index.html";
+  } else {
+    // User is authenticated, continue with your page logic
+    console.log("User authenticated:", currentuser);
+  }
+
+
+
+
+
+        const loaderContainer = document.getElementById("loader");
+        const spinner = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer);
+        var prabalid;
+        var prabalidlist=[];
+        var statusflag, assignflag, finalcomment;
+        import { app} from "./firebase-config.js";  
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-analytics.js";
+  
+        import { getDatabase, ref, child, onValue, get, set, update, remove, query, orderByChild, equalTo} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        const db = getDatabase();
+
+
+
+        var slno = 0;
+        //const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+       
+
+        if(userpriv == "LLU" || userpriv == "SAU")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+            }
+
+            if(userpriv == "LLA")
+            {
+                document.getElementById('btn_refresh').style.display = "none";
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('myprov').style.display = "none";
+                
+            }
+
+
+        
+        var thead = document.getElementById("thead");
+        var thead2 = document.getElementById("thead2");
+        var thead3 = document.getElementById("thead3");
+        var tbody = document.getElementById("tbody1");
+        var tbody2 = document.getElementById("tbody2");
+        var tbody3 = document.getElementById("tbody3");
+        var resulttable = document.getElementById("resulttable");
+        var assigntable = document.getElementById('assigntable');
+        let prabalfilter = document.getElementById("input1");
+        
+        document.getElementById('userinputdiv').style.display ="none";
+       
+        resulttable.style.display ="none";
+        assigntable.style.display ="none";
+        
+        
+
+       
+        var searchcount = document.getElementById('searchcount');
+        var flag;
+
+         document.getElementById('btn_prabalpluslive').addEventListener('click', function(){
+                  window.location.href = "prabalpluslive.html";});
+
+            document.getElementById('btn_create').addEventListener('click', function(){
+                  window.location.href = "uploaddocket.html";
+        
+        
+        });
+
+
+        function AddDataToTable(LCID,PrabalDocketID,Customer,ServiceType,Address,OpenTime,Priority,SourceDocketID,BookedIn,Status,isPrabalplus){
+            let trow= document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let td7 = document.createElement('td');
+            let td8 = document.createElement('td');
+            let td9 = document.createElement('td');
+            let td10 = document.createElement('td');
+
+            let assgbtn = document.createElement('button');
+           
+           let delbtn = document.createElement('button');
+            assgbtn.innerText ="ASSIGN";
+            assgbtn.className ="btn btn-default";
+            delbtn.className ="btn btn-danger";
+            delbtn.innerText ="DELETE";
+            delbtn.style.marginTop ="5px";
+            delbtn.style.display = "none";
+            if (Status == "INPROGRESS")
+            {
+                delbtn.style.display = "block";
+            }
+
+            if(userpriv == "LLA")
+            {
+                assgbtn.style.display = "none";
+                delbtn.style.display = "none";
+            }
+            td10.append(assgbtn);
+            td10.append(delbtn);
+
+           
+
+
+            if(currentuser){
+                    if (userpriv == "SAU" || userpriv == "LLU"){
+                        document.getElementById('btn_create').style.display ="block";
+                        document.getElementById('btn_refresh').style.display ="block";
+       
+                    }
+                }
+
+            
+            td1.innerHTML = ++slno;
+            td2.innerHTML = LCID;
+            td3.innerHTML = PrabalDocketID;
+            td4.innerHTML = Customer;
+            
+            td5.innerHTML = ServiceType;
+            td6.innerHTML = Address;
+            
+            td7.innerHTML = OpenTime;
+            td8.innerHTML = Priority;
+            td9.innerHTML = Status;
+
+            if(td9.innerHTML == "RESOLVED") {
+                
+                assgbtn.style.display = "none";
+            }
+            td9.style.color = "red";
+            td9.style.fontWeight ="bold";
+            //td9.style.marginLeft = "20px";
+            
+            // assgbtn.style.marginTop = "20px";
+            // assgbtn.style.marginBottom = "auto";
+             assgbtn.className = "btn btn-default";
+             
+             assgbtn.style.cursor ="pointer";
+            prabalid = PrabalDocketID;
+            
+            //td10.styte.display = "none";
+            if(Status == "ASSIGNED" || Status == "RESOLVED" )
+            {
+                
+                td9.style.color = "green";
+                //td10.innerHTML = "ASSIGNED";
+                //td10.style.display = "none";
+            }
+
+            delbtn.onclick = async function () {
+
+        const result = await Swal.fire({
+        title: 'Confirm Delete',
+        html: `Want to delete docket <strong style="color:red;">${td3.innerHTML} (${td4.innerHTML}, Circuit ID: ${td2.innerHTML})</strong>
+               ?`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'YES',
+        cancelButtonText: 'NO'
+    });
+    //if (!confirm("Are you sure?")) return;
+    if (result.isConfirmed){
+        try {
+        // Current date and time
+        const date = new Date();
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        const localDate = `${year}-${month}-${day}`;
+        const localTime = date.toTimeString().split(' ')[0];
+
+        // Calculate fault duration
+        const date1 = new Date(OpenTime);
+        const date2 = new Date();
+        const diffTime = date2.getTime() - date1.getTime();
+        const days = Math.floor(Math.abs(diffTime / (1000 * 3600 * 24)));
+        const hours = Math.floor((diffTime % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diffTime % 3600000) / (1000 * 60));
+        const diffDays = `${days} day(s) ${hours} hrs and ${minutes} mins`;
+
+        // ✅ Step 1: Remove from trplcfaultlist
+        await remove(ref(db, "trplcfaultlist/" + PrabalDocketID));
+
+        // ✅ Step 2: Add entry to lcfaulthistory
+        await set(ref(db, "lcfaulthistory/" + LCID + "/" + PrabalDocketID), {
+             LCID: LCID,
+            Customer: Customer,
+             PrabalDocketID: PrabalDocketID,
+             Address: Address,
+             ServiceType: ServiceType,
+             Priority: Priority,
+             OpenTime: OpenTime,
+
+            CloseTime: `${localDate} ${localTime}`,
+            FaultDuration: diffDays,
+             isPrabalplus: isPrabalplus
+        });
+
+        // ✅ Step 3: Add entry to dockethistory
+        await set(ref(db, "dockethistory/" + PrabalDocketID), {
+          LCID: LCID,
+        Customer: Customer,
+        PrabalDocketID: PrabalDocketID,
+        Address: Address,
+        ServiceType: ServiceType,
+        Priority: Priority,
+        OpenTime: OpenTime,
+
+            CloseTime: `${localDate} ${localTime}`,
+            FaultDuration: diffDays,
+            isPrabalplus: isPrabalplus
+        });
+
+        //alert("Docket deleted successfully");
+         await Swal.fire({
+            icon: 'success',
+            title: 'Docket deleted successfully!',
+            timer: 1500,
+            showConfirmButton: false
+        });
+        location.reload();
+
+    } catch (error) {
+        //alert("Error: " + error.message);
+         Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: err.message || err
+        });
+        console.error("Error deleting docket:", error);
+    }
+    }
+
+  
+};
+
+
+            assgbtn.onclick = function(){
+
+                
+                assigntable.style.display ="block";
+                //let thead2 = document.createElement('thead');
+                // tbody2.style.display ="block";
+                // thead2.style.display ="block";
+                document.getElementById('btn_export').style.display ="none";
+                document.getElementById('btn_refresh').style.display ="none";
+                document.getElementById('lctable').style.display = "none";
+                
+                thead.style.display ="none";
+                tbody.style.display = "none";
+                
+                let trow1= document.createElement("tr");
+
+                let td1_1 = document.createElement('td');
+                let td2_1 = document.createElement('td');
+                let td3_1 = document.createElement('td');
+                let td4_1 = document.createElement('td');
+                let td5_1 = document.createElement('td');
+                let td6_1 = document.createElement('td');
+                let td7_1 = document.createElement('td');
+                let td8_1 = document.createElement('td');
+                let td9_1 = document.createElement('td');
+                let td10_1 = document.createElement('td');
+                let td10select = document.createElement('select');
+                let prioopt1 = document.createElement('option');
+                // let prioopt2 = document.createElement('option');
+                // let prioopt3 = document.createElement('option');
+                let prioopt4 = document.createElement('option');
+                prioopt1.innerHTML = "Normal";
+                // prioopt2.innerHTML = "High";
+                // prioopt3.innerHTML = "Very High";
+                prioopt4.innerHTML = "Critical";
+                td10select.append(prioopt1);
+                // td10select.append(prioopt2);
+                // td10select.append(prioopt3);
+                td10select.append(prioopt4);
+                td10_1.append(td10select);
+                let current_priority = Priority;
+                td10select.value = current_priority;
+
+                let submitbtn = document.createElement('button');
+				
+                td9_1.append(submitbtn);
+                // Fault types
+const faultOptions = [
+  "Fault Restored",
+  "Link down",
+  "ONU faulty",
+  "ONU OFFLINE",
+  "ONU side MAC ok but Link down",
+  "ONU MAC not reflecting in OLT",
+  "PE router MAC not reflecting in OLT-- Uplink issue",
+  "OFC Route failure",
+  "OFC Ring route Fault",
+  "Link Flapping",
+  "High Latency",
+  "OCPAN path failure",
+  "MAAN issue",
+  "Transmission system fault",
+  "ONU power level low",
+  "Last mile OFC break-TIP media break",
+  "Customer didn't share converter/ONU status-Reason not conformed",
+  "Router port Fault",
+  "Transmission system down due to power plant failure",
+  "AC/DC power adapter faulty",
+  "RF/Minilink Issue",
+  "Ping test is required by Laptop",
+  "Upload Speed Issue",
+  "Download Speed Issue"
+];
+
+// Assign sections
+const assignOptions = [
+  "LeasedLine",
+  "FinalSubmission",
+  "NIB",
+  "CNTx-NER",
+  "Tx-West",
+  "Tx-South",
+  "Tx-North",
+  "BBM-AGT",
+  "BBM-GB",
+  "BBM-Khowai",
+  "BBM-Dhalai",
+  "BBM-Unakoti",
+  "BBM-North",
+  "BBM-Bishalgarh",
+  "BBM-Sonamura",
+  "BBM-Gomati",
+  "BBM-South",
+  "CM-Maintenance",
+  "SDE-RKPur",
+  "SDE-GB",
+  "SDE-Dharmanagar",
+  "SDE-External",
+  "SDE-Bharatnet"
+];
+
+// Create fault dropdown
+let td6select = document.createElement('select');
+td6select.style.width = "100px";
+faultOptions.forEach(f => {
+  let opt = document.createElement('option');
+  opt.textContent = f;
+  td6select.appendChild(opt);
+});
+td6_1.appendChild(td6select);
+
+// Create assign dropdown
+let td7select = document.createElement('select');
+assignOptions.forEach(a => {
+  let opt = document.createElement('option');
+  opt.textContent = a;
+  td7select.appendChild(opt);
+});
+td7_1.appendChild(td7select);
+
+
+				
+                
+
+                td7select.style.width = "100px";
+                //td7select.value = current_section;
+                
+                let td8input = document.createElement('input');
+                td8input.style.width ="100px";
+                td8_1.append(td8input);
+                
+                submitbtn.innerText ="SUBMIT";
+                //submitbtn.style.marginTop ="20px";
+                submitbtn.className ="btn btn-success";
+
+                    // statusflag = "OPEN";
+                    // finalcomment = td8input.value;
+                    // assignflag =  "ASSIGNED";
+
+                const dbref = ref(db);
+                let current_faulttype = "";
+                    let current_section = "";
+                    let current_comment = "";
+
+                 get(child(dbref, "lcfaultrecords/"+PrabalDocketID)).then((snapshot) => {
+
+                    current_faulttype = snapshot.val().FaultType;
+                    current_section = snapshot.val().assignedto_workgroup;
+                    current_comment = snapshot.val().Comment;
+                    td6select.value = current_faulttype;
+                    td7select.value = current_section;
+                    //td8input.value = current_comment;
+                 });
+
+                submitbtn.onclick= function(){
+                    if (td7select.value == "FinalSubmission") {
+                    statusflag = "RESOLVED";
+                    finalcomment = "Docket Closed";
+                    assignflag = "RESOLVED";
+                } else {
+                    statusflag = "OPEN";
+                    finalcomment = td8input.value;
+                    assignflag = "ASSIGNED";
+                }
+                    var date = new Date();
+                    const year = date.getFullYear();
+                    const month = String(date.getMonth() + 1).padStart(2, '0');
+                    const day = String(date.getDate()).padStart(2, '0');
+                    const localDate = year +"-"+ month +"-"+day ;
+                    const time = date.toTimeString();
+                    const localTime = time.split(' ')[0];
+                    var eventid = 1;
+                    const dbref = ref(db);
+
+                    set(ref(db,"lcfaultrecords/"+PrabalDocketID+"/"),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    ServiceType: ServiceType,
+                    assignedto_workgroup:td7select.value,
+                    Priority: td10select.value,
+                    OpenTime: OpenTime,
+                    Status: statusflag,
+                    AssignDate: localDate,
+                    AssignTime: localTime,
+                    FaultType:td6select.value,
+                    assignedby_workgroup:"LeasedLine",
+                    Comment: "LeasedLine To "+ td7select.value +"("+localDate+" "+localTime+"): "+finalcomment,
+                    event_ID: String(eventid),
+                    isPrabalplus: isPrabalplus
+                    
+                }).then(()=>{
+
+                   
+                    
+                    // alert("Docket assigned sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+            set(ref(db,"prabalidrecords/"+PrabalDocketID+"/"+eventid+"/"),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    ServiceType: ServiceType,
+                    event_ID: String(eventid),
+                    assignedto_workgroup:td7select.value,
+                    Priority: td10select.value,
+                    Status: statusflag,
+                    AssignDate: localDate,
+                    AssignTime: localTime,
+                    FaultType:td6select.value,
+                    assignedby_workgroup:"LeasedLine",
+                    Comment: finalcomment,
+                    isPrabalplus: isPrabalplus
+                    
+                }).then(()=>{
+
+                   
+            update(ref(db,"trplcfaultlist"+"/"+ PrabalDocketID),
+                {
+                    LCID: LCID,
+                    Customer: Customer,
+                    PrabalDocketID: PrabalDocketID,
+                    Address: Address,
+                    Priority: td10select.value,
+                    Status: assignflag,
+                    ServiceType:ServiceType,
+                    OpenTime: OpenTime,
+                    RFP: td6select.value
+                    // RFO:"NA",
+                    // BookedIn: BookedIn,
+                    // SourceDocketID: SourceDocketID
+              
+                }).then(()=>{
+                     alert("Docket assigned sucessfully");
+                     location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+                    
+                    // alert("Docket assigned sucessfully !");
+                    // location.reload();
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+
+
+
+
+                }
+
+     
+                td1_1.innerHTML = LCID;
+                td2_1.innerHTML = PrabalDocketID;
+                td3_1.innerHTML = Customer;
+                td4_1.innerHTML = ServiceType;
+                td5_1.innerHTML = Address;
+               
+                trow1.appendChild(td1_1);
+                trow1.appendChild(td2_1);
+                trow1.appendChild(td3_1);
+                trow1.appendChild(td4_1);
+                trow1.appendChild(td5_1);
+                trow1.appendChild(td6_1);
+                trow1.appendChild(td10_1);
+                trow1.appendChild(td7_1);
+                trow1.appendChild(td8_1);
+                trow1.appendChild(td9_1);
+
+                tbody2.appendChild(trow1);
+
+            }
+        
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+            trow.appendChild(td7);
+            trow.appendChild(td8);
+            trow.appendChild(td9);
+            trow.appendChild(td10);
+            // trow.appendChild(td11);
+
+            tbody.appendChild(trow);
+           // thead.appendChild(tbody);
+
+
+        }
+        function AddAllItemsToTable(praballist){
+            slno = 0;
+            tbody.innerHTML = "";
+            praballist.forEach(element => {
+                AddDataToTable(element.LCID,element.PrabalDocketID,element.Customer,element.ServiceType,element.Address,element.OpenTime,element.Priority,element.SourceDocketID,element.BookedIn,element.Status,element.isPrabalplus);
+            });
+
+        }
+
+        
+
+       
+            function GetAllDataOnce(){
+            const dbref = ref(db);
+
+            get(child(dbref,"trplcfaultlist")).then((snapshot)=>{
+                var praballist=[];
+                
+                
+                snapshot.forEach(childSnapshot => {
+                    //flag = childSnapshot.val().Status;
+                    praballist.push(childSnapshot.val());
+                    prabalidlist.push(childSnapshot.val().PrabalDocketID);
+                    // console.log(prabalidlist);
+
+                });
+                praballist
+                praballist.sort((b1, b2) => 
+                    (new Date(b1.OpenTime) < new Date(b2.OpenTime)) ? 1 : (new Date(b1.OpenTime) > new Date(b2.OpenTime)) ? -1 : 0);
+                
+                AddAllItemsToTable(praballist);
+                searchcount.innerText = slno;
+                spinner.stop();
+                loaderContainer.style.display = "none";
+               
+            });
+            
+        } 
+        window.onload = GetAllDataOnce();
+
+     
+        document.getElementById("btn_refresh").style.cursor = "pointer";
+        document.getElementById("btn_refresh").onclick = async function () {
+  try {
+    const dbref = ref(db);
+    const docketRef = ref(db,"dockethistory");
+    const trplcRef = ref(db,"trplcfaultlist");
+    const deleteddocketRef = ref(db,"prabalidrecords");
+
+    // helper function to normalize values to strings
+    const norm = (v) => (v === null || v === undefined) ? "" : String(v).trim();
+
+    
+    // get all existing entries in prabalidrecords
+    const docketSnap = await get(docketRef);
+    const processedPrabalDocketIDs = new Set();
+
+    const deleteddocketSnap = await get(deleteddocketRef);
+    const deletedPrabalDocketIDs = new Set();
+
+    
+    if (docketSnap.exists()) {
+      docketSnap.forEach((child) => {
+        const val = child.val();
+        //const lcid = norm(val.LCID);
+        const docket = norm(val.PrabalDocketID);
+        processedPrabalDocketIDs.add(docket);
+        //existingLCIDs.add(lcid);
+      });
+    }
+
+    if (deleteddocketSnap.exists()) {
+      deleteddocketSnap.forEach((child) => {
+        const data = child.val();
+        //const lcid = norm(val.LCID);
+        const deleteddocket = norm(data.PrabalDocketID);
+        deletedPrabalDocketIDs.add(deleteddocket);
+        //existingLCIDs.add(lcid);
+      });
+    }
+
+
+
+    // get all existing entries in trplcfaultlist
+    const trplcSnap = await get(trplcRef);
+    const existingPrabalDocketIDs = new Set();
+    const existingLCIDs = new Set();
+
+  
+
+    if (trplcSnap.exists()) {
+      trplcSnap.forEach((child) => {
+        const val = child.val();
+        const lcid = norm(val.LCID);
+        const pd = norm(val.PrabalDocketID);
+        existingPrabalDocketIDs.add(pd);
+        existingLCIDs.add(lcid);
+      });
+    }
+
+    // get live entries from prabalpluslive
+    const liveSnap = await get(child(dbref, "prabalpluslive"));
+
+
+    if (!liveSnap.exists()) {
+      alert("No data found in prabalpluslive!");
+      return;
+    }
+
+     if (trplcSnap.exists()) {
+      trplcSnap.forEach((child) => {
+        const val = child.val();
+        const trplclcid = norm(val.LCID);
+        const pd = norm(val.PrabalDocketID);
+        const prabalCheck = val.isPrabalplus;
+
+	 liveSnap.forEach((childSnap) => {
+      const docket = childSnap.val();
+      const praballcid = norm(docket.LCID);
+      const prabalid = norm(docket.PrabalDocketID);
+
+	if(trplclcid === praballcid && prabalCheck === "False") {
+
+ update(ref(db,"trplcfaultlist"+"/"+ pd),
+                {
+                   isMatchedwithPrabalplus: "True",
+                   PrabalID: prabalid
+              
+                }).then(()=>{
+                update(ref(db,"lcfaultrecords"+"/"+ pd),
+                {
+                   isMatchedwithPrabalplus: "True",
+                   PrabalID: prabalid
+              
+                })
+                    
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+
+
+}
+
+     
+    });
+
+
+        
+      });
+    }
+
+    let addedCount = 0;
+    let skippedCount = 0;
+    let invalidCount = 0;
+    const promises = [];
+
+    liveSnap.forEach((childSnap) => {
+        const docket = childSnap.val();
+           
+      const lcid = norm(docket.LCID);
+      const pd = norm(docket.PrabalDocketID);
+      //const combinedKey = `${lcid}_${pd}`;
+
+      // skip invalid entries
+      if (!lcid || !pd) {
+        skippedCount++;
+        return;
+      }
+
+       
+
+
+      // skip if PrabalDocketID already exists OR LCID+PrabalDocketID combo exists
+      if (existingPrabalDocketIDs.has(pd) || processedPrabalDocketIDs.has(pd) || existingLCIDs.has(lcid)|| deletedPrabalDocketIDs.has(pd) ) {
+        skippedCount++;
+        return;
+      }
+// skip invalid dockets
+      if (docket.FaultType ==="Customer Modem/Router fault" ||
+docket.FaultType === "Customer switched off device - intimated" ||
+docket.FaultType === "Fault restored - System updation pending" ||
+docket.FaultType === "BSNL End ok - Customer network issue" ||
+docket.FaultType === "OFC unrepairable") {
+        invalidCount++;
+        return;
+      }
+
+      existingPrabalDocketIDs.add(pd);
+      existingLCIDs.add(lcid);
+
+      // format OpenTime
+      const date = new Date(docket.OpenTime);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      const localDate = `${year}-${month}-${day}`;
+      const time = date.toTimeString().split(" ")[0];
+      const faultDateTime = `${localDate} ${time}`;
+
+      // write to trplcfaultlist with PrabalDocketID as key
+      const p = set(ref(db, "trplcfaultlist/" + pd), {
+        Customer: docket.Customer || "",
+        LCID: String(lcid),
+        PrabalDocketID: String(pd),
+        ServiceType: docket.ServiceType || "",
+        Address: docket.Address || "",
+        OpenTime: faultDateTime,
+        Priority: "Normal",
+        Status: "INPROGRESS",
+        isPrabalplus : "True",
+        isMatchedwithPrabalplus: "False"
+      });
+
+      promises.push(p);
+      addedCount++;
+    });
+
+    // wait for all writes
+    await Promise.all(promises);
+
+    alert(`✅ Dockets synced successfully!\n\nAdded: ${addedCount}\nSkipped (duplicates): ${skippedCount}\nSkipped (invalid): ${invalidCount}`);
+    GetAllDataOnce();  // refresh table
+    location.reload();
+
+  } catch (error) {
+    alert("Error during sync: " + error.message);
+    console.error(error);
+  }
+};
+
+//------------------------------------------
+
+
+        
+
+        prabalfilter.addEventListener('keyup', function(){
+            let searchitem = prabalfilter.value.toUpperCase();
+            
+            console.log(searchitem);
+
+            const dbref = ref(db);
+            get(child(dbref,"trplcfaultlist")).then((snapshot)=>{
+                var filteredprabal=[];
+                snapshot.forEach(childSnapshot => {
+
+                                       
+            if(childSnapshot.val().LCID.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().PrabalDocketID.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().Customer.toUpperCase().indexOf(searchitem) > -1
+			|| childSnapshot.val().Address.toUpperCase().indexOf(searchitem) > -1 
+            || childSnapshot.val().OpenTime.toUpperCase().indexOf(searchitem) > -1){
+                     filteredprabal.push(childSnapshot.val());
+                     }
+                    
+                   
+                                  
+                    
+                   
+                });
+                AddAllItemsToTable(filteredprabal);
+                searchcount.innerText = slno;
+                
+            if (searchitem == ""){
+                GetAllDataOnce();
+                    }
+                });
+
+
+
+                  });
+
+
+         var btn_export = document.getElementById('btn_export');
+         //btn_export.style.marginLeft = "300px";
+         btn_export.style.cursor = "pointer";
+         btn_export.addEventListener('click',exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+           
+         $('#lctable').table2excel({
+ 		exclude: ".no-export",
+ 		filename: "download.xls",
+ 		fileext: ".xls",
+ 		exclude_links: true,
+ 		exclude_inputs: true
+ 	});
+}
+
+      
+
+        
+
+
+    </script>
+</body>
+</html>

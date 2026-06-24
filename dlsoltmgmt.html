@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pending Provision Orders</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+   #provdetaildiv{
+    position: fixed;
+    top: 200px; /* Distance from the top */
+      right: 100px; /* Distance from the right */
+      background-color: #FFDEC8;
+      border: 1px solid black;
+      z-index: 1000; /* Ensure it's above other elements */
+      overflow: auto;
+   }
+   #provdetailtable td  {
+    border: 1px solid black;
+   }
+   #provdetailtable th  {
+    border: 1px solid black;
+   }
+      /* Add this CSS to position the open-btn */
+      .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    
+</style>
+
+<body>
+<div>
+       
+</div>
+
+<div class="main-content">
+    <button class="btn btn-success" id="home-btn"> HOME</button>
+    <h1 style="display:flex; text-align: center; margin-left: 40%;"> Dhaleswar OLT</h1>
+    <div style="margin:10px 0;">
+    <input type="text" id="searchInput" class="form-control"
+           placeholder="🔍 Search PON / ONU / MAC / Customer / FTTH..."
+           style="max-width:400px;">
+</div>
+    <table class="table table-bordered" id="onudata-table">
+      <thead>
+        <tr>
+          
+          <th>PON</th>
+          <th>ONU</th>
+          <th>FTTH No/IP Address</th>
+          <th>MAC</th>
+          <th>Customer</th>
+          <th>Address</th>
+          <th>Current Status</th>
+          <th>Last Synced</th>
+          <th>Rx Power(dBm)</th>
+          <th>Last Event</th>
+          <th>Event Time</th>
+
+        </tr>
+      </thead>
+      <tbody id="onudata-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+
+</div>
+   
+    
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="script.js"></script>
+    <!-- <script type="module" src="auth-check.js"></script> -->
+    <script type="module">
+
+           function getWithExpiry(key) {
+    try {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      
+      const item = JSON.parse(itemStr);
+      
+     
+      if (typeof item === 'string') {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      const now = new Date();
+      
+      if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      return item.value;
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+      localStorage.removeItem(key); // Clear corrupted data
+      return null;
+    }
+  }
+
+  const currentuser = getWithExpiry("currentuser");
+
+  if (!currentuser) {
+    window.location.href = "index.html";
+  } else {
+    // User is authenticated, continue with your page logic
+    console.log("User authenticated:", currentuser);
+  }
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+//import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+ import { app} from "./firebase-config.js";  
+
+//const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+//const auth = getAuth(app);
+//const firestore = getFirestore(app);
+
+//   const currentuser = localStorage.getItem("currentuser");
+//   const userRole = localStorage.getItem("userpriv");
+//   const userData = userDoc.data();
+//   const userRole = userData.role || 'user';
+//   const userSection = userData.section || '';
+//   var userSection = localStorage.getItem("userSection");
+//   console.log(userSection);
+//   console.log(userRole);
+
+    document.getElementById('home-btn').onclick = () => {
+      window.location.href = "alphahome.html";
+    };
+
+  const dataRef = ref(db, 'dlsoltdata');
+
+  //let orders = [];
+   let filteredData = [];
+  onValue(dataRef, (snapshot) => {
+    const orders = snapshot.val();
+
+    //orders.push(snapshot.val());
+    const tbody = document.getElementById("onudata-body");
+    tbody.innerHTML = "";
+
+    
+    for (let key in orders) {
+      const order = orders[key];
+      filteredData.push(order);
+
+   /* ---------- RX POWER COLOR ---------- */
+  let rx = parseFloat(order.rxpower);
+  let rxColor = (!isNaN(rx) && rx <= -26) ? "red" : "black";
+
+  /* ---------- ONU STATUS COLOR ---------- */
+  let onuStatus = order.onustatus || "";
+  let onuColor = "black";
+
+  if (onuStatus === "ONLINE") {
+      onuColor = "green";
+  } 
+  else if (onuStatus === "LOS/Fibre break") {
+      onuColor = "red";
+  }
+
+     filteredData.sort((a, b) => {
+        let rxA = parseInt(a.onu_id);
+        let rxB = parseInt(b.onu_id);
+
+        if (isNaN(rxA)) rxA = 999;
+        if (isNaN(rxB)) rxB = 999;
+
+        return rxA - rxB; // lowest first
+    });
+
+      
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${order.pon_no || ''}       
+            
+            </td>
+
+          <td>${order.onu_id || ''}</td>
+          <td>${order.ftthno || ''}</td>
+          <td>${order.macaddress || ''}</td>
+          <td>${order.customer || ''}</td>
+          <td>${order.address || ''}</td>
+          <td>${order.currentstatus || ''}</td>
+          <td>${order.synctime || ''}</td>
+
+
+           <!-- RX POWER -->
+      <td style="color:${rxColor}; font-weight:bold;">
+          ${order.rxpower || ''}
+      </td>
+
+      <!-- ONU STATUS -->
+      <td style="color:${onuColor}; font-weight:bold;">
+          ${onuStatus}
+      </td>
+         
+          <td>${order.eventtime || ''}</td>
+        `;
+        tbody.appendChild(row);
+         
+    
+
+    }
+  });
+
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const searchInput = document.getElementById("searchInput");
+
+    searchInput.addEventListener("keyup", function () {
+        const filter = searchInput.value.toLowerCase();
+        const rows = document.querySelectorAll("#onudata-body tr");
+
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(filter) ? "" : "none";
+        });
+    });
+
+});
+
+/*=====HOME BUTTON=====*/
+document.getElementById("home-btn").addEventListener("click", function () {
+window.location.href = "alphahome.html";
+    
+});
+
+    </script>
+</body>
+</html>

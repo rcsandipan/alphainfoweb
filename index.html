@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AlphaInfotech Login</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      background: #138808 ;
+      
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border-radius: 15px;
+      box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+      width: 100%;
+      max-width: 400px;
+      padding: 30px;
+    }
+
+    .login-logo {
+      display: block;
+      margin: 0 auto 20px;
+      max-width: 220px;
+    }
+
+    .form-label {
+      font-weight: 600;
+      margin-bottom: 5px;
+    }
+
+    .btn-login {
+      width: 100%;
+      font-weight: 600;
+      background-color: #0161b0;
+      border: none;
+    }
+
+    .btn-login:hover {
+      background-color: #004c85;
+    }
+
+    .forgot-link {
+      display: block;
+      text-align: right;
+      margin-top: 10px;
+      font-size: 0.9rem;
+      font-style: italic;
+      cursor: pointer;
+      color: #0161b0;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <img src="alphaimg.png" alt="Logo" class="login-logo">
+
+    <div class="mb-3">
+      <label for="email" class="form-label">Email</label>
+      <input type="email" id="email" class="form-control" placeholder="Enter your email" required>
+    </div>
+
+    <div class="mb-3">
+      <label for="password" class="form-label">Password</label>
+      <input type="password" id="password" class="form-control" placeholder="Enter password" required>
+    </div>
+
+    <button id="login-btn" class="btn btn-login text-white">
+      LOGIN
+      <span id="spinner" class="spinner-border spinner-border-sm d-none" role="status"></span>
+    </button>
+
+    <span id="resetpassword" class="forgot-link">Forgot password? Reset here</span>
+
+    <footer>
+      Official login page for <b>Alpha Infotech users</b>. Unauthorized access is prohibited.
+    </footer>
+  </div>
+
+  <!-- Firebase Script -->
+  <script type="module">
+    
+    import { getFirestore, doc, setDoc,getDoc} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+    import { getDatabase, ref, get, child, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+    import { app, rtdb } from "./firebase-config.js";  
+    const auth = getAuth(app);
+    //const rtdb = getDatabase();
+    
+    const loginBtn = document.getElementById("login-btn");
+    const resetpassword = document.getElementById("resetpassword");
+
+    resetpassword.onclick = () => {
+      window.location.href = "resetpassword.html";
+    };
+
+    loginBtn.addEventListener("click", signIn);
+    document.getElementById("password").addEventListener("keydown", (event) => {
+      if (event.key === "Enter") signIn();
+    });
+
+    function signIn() {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      if (!email || !password) return;
+
+      document.getElementById("spinner").classList.remove("d-none");
+      loginBtn.disabled = true;
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(async (result) => {
+          const cuuser = auth.currentUser.uid;
+          function setWithExpiry(key, value, ttl) {
+          const now = new Date();
+          const item = {
+            value: value,
+            expiry: now.getTime() + ttl, // ttl in milliseconds
+          };
+          localStorage.setItem(key, JSON.stringify(item));
+        }
+
+        setWithExpiry("currentuser", cuuser, 12 * 60 * 60 * 1000);
+
+
+          const db = getFirestore();
+          const userRef = doc(db, "users", cuuser);
+          //await setDoc(userRef, { LastLogin: Date.now() }, { merge: true });
+          const docSnap = await getDoc(userRef);
+          if (docSnap.exists()) {
+            const perno = docSnap.data().PerNo ;
+            console.log(perno);
+            
+            const dbref = ref(rtdb);
+            get(child(dbref,"userlist/"+ perno)).then((snapshot)=>{
+if(snapshot.exists()){
+                  let  username = snapshot.val().empName;
+                  sessionStorage.setItem("username", username);
+                    console.log(username);
+                    //user.innerText = staffname;
+                    
+
+                } else("No data found");
+            }).catch((error)=>{
+                alert(error);
+            });
+
+
+
+            
+          } else {
+              console.log("No such document!");
+          }
+
+          Swal.fire({
+            icon: "success",
+            title: "Login Successful",
+            showConfirmButton: false,
+            timer: 2000
+          });
+
+          setTimeout(() => {
+            window.location.href = "alphahome.html";
+          }, 2000);
+        })
+        .catch((error) => {
+          Swal.fire({
+            icon: "error",
+            title: "Login Failed",
+            text: error.message.substring(9, 100)
+          });
+          loginBtn.disabled = false;
+          document.getElementById("spinner").classList.add("d-none");
+        });
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prabal Plus Live</title>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+ 
+
+  <style>
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    .container {
+      margin-top: 30px;
+    }
+    #deleteBtn {
+      display: none;
+      margin-bottom: 10px;
+    }
+    table td, table th {
+      text-align: center;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div style="top: 40px;" class="sidebar" id="sidebar">
+    <button style="top: 10px;" class="close-btn" id="close-btn">&times;</button>
+    <ul class="menu">
+       <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+       <li id="updateuser" style="display: none;"><a href = "updateuser.html">Manage User</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+            <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+            <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+            <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+            <li id="logout"><a href = "logOut.html">LogOut</a></li>
+    </ul>
+  </div>
+
+  <div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+
+    <div class="container">
+    <h3 class="text-center mb-4">Prabal Plus Live Records</h3>
+     <input type="text" id="searchBox" class="form-control" placeholder="Search" style="width: 200px;">
+     <br>
+    <button id="deleteBtn" class="btn btn-danger">
+      <i class="bi bi-trash"></i> Delete Selected
+    </button>
+    <table class="table table-bordered">
+      <thead>
+        <tr>
+          <th><input type="checkbox" id="selectAll"></th>
+          <th>SL</th>
+          <th>DOCKET</th>
+          <th>CIRCUIT ID</th>
+          <th>CUSTOMER</th>
+          <th>ADDRESS</th>
+          <th>FAULT TYPE</th>
+          <th>OPEN TIME</th>
+          <th>PRIORITY</th>
+          <th>SERVICE TYPE</th>
+          <th>STATUS</th>
+        </tr>
+      </thead>
+      <tbody id="table-body">
+        <!-- Data loads here -->
+      </tbody>
+    </table>
+  </div>
+
+  </div>
+
+  
+
+  <!-- Bootstrap icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+   <script src="script.js"></script>
+  <script type="module">
+    import { app } from "./firebase-config.js"; 
+    import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+    const db = getDatabase();
+
+    const tableBody = document.getElementById("table-body");
+    const deleteBtn = document.getElementById("deleteBtn");
+    const selectAll = document.getElementById("selectAll");
+
+    // Fetch and display data
+    async function loadData() {
+      tableBody.innerHTML = "";
+      const snapshot = await get(ref(db, "prabalpluslive"));
+
+      if (snapshot.exists()) {
+        let index = 1;
+        snapshot.forEach((childSnap) => {
+          const data = childSnap.val();
+
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td><input type="checkbox" class="rowCheckbox" data-key="${childSnap.key}"></td>
+            <td>${index++}</td>
+            <td>${data.PrabalDocketID || ""}</td>
+            <td>${data.LCID || ""}</td>
+            <td>${data.Customer || ""}</td>
+            <td>${data.Address || ""}</td>
+            <td>${data.FaultType || ""}</td>
+            <td>${data.OpenTime || ""}</td>
+            <td>${data.Priority || ""}</td>
+            <td>${data.ServiceType || ""}</td>
+            <td>${data.Status || ""}</td>
+          `;
+          tableBody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="10" class="text-center text-muted">No data found in prabalpluslive</td>`;
+        tableBody.appendChild(tr);
+      }
+
+      // Attach checkbox listeners after data is loaded
+      addCheckboxListeners();
+    }
+
+    function addCheckboxListeners() {
+      const checkboxes = document.querySelectorAll(".rowCheckbox");
+
+      // Update delete button visibility when checkbox changes
+      checkboxes.forEach(cb => {
+        cb.addEventListener("change", updateDeleteButton);
+      });
+
+      // Reset select all checkbox when reloading
+      selectAll.checked = false;
+    }
+
+    // Show/hide delete button
+    function updateDeleteButton() {
+      const checked = document.querySelectorAll(".rowCheckbox:checked").length;
+      deleteBtn.style.display = checked > 0 ? "inline-block" : "none";
+
+      // Keep "Select All" checkbox synced
+      const total = document.querySelectorAll(".rowCheckbox").length;
+      selectAll.checked = checked === total;
+    }
+
+    // Select all toggle
+    selectAll.addEventListener("change", () => {
+      const allChecked = selectAll.checked;
+      const checkboxes = document.querySelectorAll(".rowCheckbox");
+      checkboxes.forEach(cb => cb.checked = allChecked);
+      updateDeleteButton();
+    });
+
+    // Delete selected rows
+    deleteBtn.addEventListener("click", async () => {
+      const checkedBoxes = document.querySelectorAll(".rowCheckbox:checked");
+      if (checkedBoxes.length === 0) return;
+
+      if (!confirm(`Are you sure you want to delete ${checkedBoxes.length} selected record(s)?`)) return;
+
+      for (const box of checkedBoxes) {
+        const key = box.getAttribute("data-key");
+        await remove(ref(db, "prabalpluslive/" + key));
+      }
+
+      alert("Selected records deleted successfully!");
+      loadData();
+    });
+
+
+      searchBox.addEventListener("keyup", function () {
+      const filter = searchBox.value.toLowerCase();
+      const rows = tableBody.getElementsByTagName("tr");
+
+      Array.from(rows).forEach(row => {
+        const cells = row.getElementsByTagName("td");
+        if (cells.length > 0) {
+          const match = 
+            (cells[2].innerText + " " +  // DOCKET
+             cells[3].innerText + " " +  // CIRCUIT ID
+             cells[4].innerText + " " +  // CUSTOMER
+             cells[5].innerText + " " +  // ADDRESS
+             cells[8].innerText + " " +  // SERVICE TYPE
+             cells[9].innerText)          // STATUS
+            .toLowerCase()
+            .includes(filter);
+          row.style.display = match ? "" : "none";
+        }
+      });
+    });
+
+
+    // Load data on page start
+    window.onload = loadData;
+  </script>
+</body>
+</html>

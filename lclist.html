@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leased Circuit List</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+      <!-- <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+
+    
+</head>
+<style>
+       .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    .caption1{
+        justify-content: center;
+        text-align: center;
+        color: red;
+        font-weight: bolder;
+    }
+    .caption2{
+        display: flex;
+       
+        justify-content: space-around;
+        
+    }
+    .caption3{
+        display: flex;
+        flex-direction: row;
+        align-items:right;
+        justify-content: right;
+        margin-right: 50px;
+    }
+    .input{
+        width: 200px;
+        height: 30px;
+
+    }
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+    }
+
+    /* Bulk docket styles */
+    .bulk-docket-container {
+        margin: 10px 0;
+        padding: 10px;
+        background-color: #f8f9fa;
+        border-radius: 5px;
+        display: none;
+    }
+    .bulk-docket-container.show {
+        display: block;
+    }
+    .bulk-docket-btn {
+        margin: 10px 0;
+    }
+    .bulk-docket-row {
+        background-color: #e9f7fe;
+    }
+    .bulk-docket-select {
+        width: 100%;
+        padding: 5px;
+        border-radius: 3px;
+        border: 1px solid #ced4da;
+    }
+</style>
+
+<body>
+    <div class="loader-container" id="loader"></div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+            <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+            <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+            <li id="myprov"><a href="myprovision.html">My Pending Provision</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+
+      <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+        <div id="userbuttonset2">
+            <div id="caption1" class="caption1" style="display:none;"> <h4>CLICK ON THE CIRCUIT ID TO RAISE A DOCKET</h4></div>
+           
+                  
+          
+    
+        </div>
+        <!-- <div class="caption3"><input class="input" id="input1" type="text" placeholder="Search" ></div>
+    
+        <div class="caption2">
+            <div>Total Count: <b id="searchcount"></b> </div>
+             <div style="margin-left: 150px;"><button id="btn_faultcount" class="btn btn-danger" > CIRCUITS WITH MAXIMUM FAULTS</button>  </div>
+            <div><button id="btn_export" class="btn btn-default" > EXPORT TO EXCEL</button>  </div>
+        </div> -->
+
+        <!-- Bulk Docket Button -->
+        <div class="bulk-docket-btn">
+            <button id="bulk-docket-btn" class="btn btn-primary" style="display: none;">
+                BULK DOCKET
+            </button>
+        </div>
+
+<!-- Bulk Docket Options -->
+<div id="bulk-docket-container" class="bulk-docket-container">
+    <div class="row">
+        <div class="col-md-4">
+            <label for="bulk-faulttype">FAULT TYPE:</label>
+            <select id="bulk-faulttype" class="bulk-docket-select">
+                <option value="">Select Fault Type</option>
+                <option value="Link down">Link down</option>
+                <option value="ONU faulty">ONU faulty</option>
+                <option value="ONU OFFLINE">ONU OFFLINE</option>
+                <option value="ONU side MAC ok but Link down">ONU side MAC ok but Link down</option>
+                <option value="ONU MAC not reflecting in OLT">ONU MAC not reflecting in OLT</option>
+                <option value="PE router MAC not reflecting in OLT-- Uplink issue">PE router MAC not reflecting in OLT-- Uplink issue</option>
+                <option value="OFC Route failure">OFC Route failure</option>
+                <option value="OFC Ring route Fault">OFC Ring route Fault</option>
+                <option value="Link Flapping">Link Flapping</option>
+                <option value="High Latency">High Latency</option>
+                <option value="OCPAN path failure">OCPAN path failure</option>
+                <option value="MAAN issue">MAAN issue</option>
+                <option value="Transmission system fault">Transmission system fault</option>
+                <option value="ONU power level low">ONU power level low</option>
+                <option value="Last mile OFC break-TIP media break">Last mile OFC break-TIP media break</option>
+                <option value="Customer didn't share converter/ONU status - Reason not conformed">Customer didn't share converter/ONU status - Reason not conformed</option>
+                <option value="Router port Fault">Router port Fault</option>
+                <option value="Transmission system down due to power plant failure">Transmission system down due to power plant failure</option>
+                <option value="AC/DC power adapter faulty">AC/DC power adapter faulty</option>
+                <option value="RF/Minilink Issue">RF/Minilink Issue</option>
+                <option value="Ping test is required by Laptop">Ping test is required by Laptop</option>
+                <option value="Upload Speed Issue">Upload Speed Issue</option>
+                <option value="Download Speed Issue">Download Speed Issue</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="bulk-assignedto">ASSIGNED TO:</label>
+            <select id="bulk-assignedto" class="bulk-docket-select">
+                <option value="">Select Section</option>
+                <option value="NIB">NIB</option>
+                <option value="CNTx-NER">CNTx-NER</option>
+                <option value="Tx-West">Tx-West</option>
+                <option value="Tx-South">Tx-South</option>
+                <option value="Tx-North">Tx-North</option>
+                <option value="BBM-AGT">BBM-AGT</option>
+                <option value="BBM-GB">BBM-GB</option>
+                <option value="BBM-Khowai">BBM-Khowai</option>
+                <option value="BBM-Dhalai">BBM-Dhalai</option>
+                <option value="BBM-Unakoti">BBM-Unakoti</option>
+                <option value="BBM-North">BBM-North</option>
+                <option value="BBM-Bishalgarh">BBM-Bishalgarh</option>
+                <option value="BBM-Sonamura">BBM-Sonamura</option>
+                <option value="BBM-Gomati">BBM-Gomati</option>
+                <option value="BBM-South">BBM-South</option>
+                <option value="CM-Maintenance">CM-Maintenance</option>
+                <option value="SDE-RKPur">SDE-RKPur</option>
+                <option value="SDE-GB">SDE-GB</option>
+                <option value="SDE-Dharmanagar">SDE-Dharmanagar</option>
+                <option value="SDE-External">SDE-External</option>
+                <option value="SDE-Bharatnet">SDE-Bharatnet</option>
+            </select>
+        </div>
+        <div class="col-md-4">
+            <label for="bulk-priority">PRIORITY:</label>
+            <select id="bulk-priority" class="bulk-docket-select">
+                <option value="Normal">Normal</option>
+                <option value="Critical">Critical</option>
+            </select>
+        </div>
+    </div>
+    <div class="row" style="margin-top: 10px;">
+        <div class="col-md-12">
+            <button id="create-bulk-dockets" class="btn btn-success">Create Bulk Dockets</button>
+            <button id="cancel-bulk-dockets" class="btn btn-default">Cancel</button>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+        <div class="toolbar container-fluid" style="margin: 20px 0;">
+  <div class="row align-items-center">
+    
+    <!-- Left side: Search box -->
+    <div class="col-md-4 col-sm-12" style="margin-bottom: 10px;">
+      <input class="form-control" id="input1" type="text" placeholder="🔍 Search circuits...">
+       <button id="btn_export" class="btn btn-success">
+        EXPORT TO EXCEL
+      </button>
+    </div>
+
+    <!-- Middle: Total count -->
+    <div class="col-md-2 col-sm-6 text-center" style="margin-bottom: 10px;">
+      <span class="badge badge-info" style="font-size: 16px; padding: 8px 15px;">
+        Total Count: <b id="searchcount">0</b>
+      </span>
+      
+    </div>
+
+    <!-- Right side: Buttons -->
+    <div class="col-md-6 col-sm-6 text-right" style="margin-bottom: 10px;">
+      <button id="btn_faultcount" class="btn btn-danger" style="margin-right: 10px;">
+        CIRCUITS WITH MAXIMUM FAULTS
+      </button>
+     
+    </div>
+
+  </div>
+</div>
+
+        
+        
+        
+        <br><br>
+        <div class="container">
+            <table id= "lclist"class="table table-bordered">
+                <thead id="thead">
+                    <th><input type="checkbox" id="select-all"></th>
+                    <th> SL</th>
+                     <th style="width: 140px;">LC ID</th>
+                    <!-- <th>PRABAL DOCKET ID</th> -->
+                    <th>CUSTOMER NAME</th>
+                    
+                    <th> ADDRESS</th>
+                    <th>CIRCUIT TYPE</th>
+                    <th> BANDWIDTH</th>
+                    <th> MEDIA</th>
+                    <th> ACTION</th>
+                   
+                    
+                </thead>
+                <tbody id="tbody1"></tbody>
+               
+            </table>
+        </div>
+
+      </div>
+    
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script type="module">
+
+if(localStorage.getItem('currentuser') == '') {
+  window.location.href = 'https://lccare.netlify.app/index.html';
+}
+import { app} from "./firebase-config.js";  
+
+        const loaderContainer = document.getElementById("loader");
+        const spinner = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer);
+
+        var slno = 0;
+        var tbody = document.getElementById("tbody1");
+        var tbody2 = document.getElementById("tbody2");
+        var thead = document.getElementById("thead");
+        var cadreselect = document.getElementById('cadreselect');
+        var findbycadrebtn = document.getElementById('findbycadrebtn');
+        var searchcount = document.getElementById('searchcount');
+        var prabaldocketid = localStorage.getItem("prabaldocketid");
+        let lcfilter = document.getElementById("input1");
+        let lcid,customer,address,servicetype;
+        const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+
+
+        // Bulk docket elements
+        const bulkDocketBtn = document.getElementById('bulk-docket-btn');
+        const bulkDocketContainer = document.getElementById('bulk-docket-container');
+        const selectAllCheckbox = document.getElementById('select-all');
+        const createBulkDocketsBtn = document.getElementById('create-bulk-dockets');
+        const cancelBulkDocketsBtn = document.getElementById('cancel-bulk-dockets');
+
+
+
+
+
+        if(userpriv == "LLU" || userpriv == "SAU")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+                bulkDocketBtn.style.display = "block";
+            }
+            if(userpriv == "LLA")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('myprov').style.display = "none";
+                bulkDocketBtn.style.display = "block";
+                
+            }
+        
+        function AddDataToTable(lcid,customer,address,ckttype,bw,media,isSelected = false){
+            
+            let trow= document.createElement("tr");
+             if (isSelected) {
+                trow.classList.add('bulk-docket-row');
+            }
+            
+            // Checkbox column
+            let tdCheckbox = document.createElement('td');
+            let checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.className = 'row-checkbox';
+            checkbox.dataset.lcid = lcid;
+            checkbox.dataset.customer = customer;
+            checkbox.dataset.address = address;
+            checkbox.dataset.servicetype = ckttype;
+            tdCheckbox.appendChild(checkbox);
+
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let td7 = document.createElement('td');
+            let td8 = document.createElement('td');
+            
+            td1.innerHTML = ++slno;
+           
+            td2.style.width = "140px";
+            
+
+
+            const span1 = document.createElement("span");
+            span1.textContent = lcid;
+
+            // Create the second <span> element
+            const span2 = document.createElement("span");
+            span2.textContent = "click to raise docket";
+            span2.style.fontStyle = "italic"; 
+            
+            span2.style.color = "blue";
+            span2.style.cursor = "pointer";
+
+             if(currentuser){
+                    if (userpriv == "SAU" || userpriv == "LLU"|| userpriv == "LLA"){
+                //document.getElementById('caption1').style.display ="block";
+
+                        span2.style.display = "block" ;
+
+     
+                    }
+                    else {
+                        span2.style.display = "none";
+                    }
+                }
+            // Append both spans to the td
+            td2.appendChild(span1);
+
+           const br = document.createElement("br");
+
+            td2.appendChild(br);
+            td2.appendChild(span2);
+
+
+
+            span2.onclick = function(){
+            if(confirm("Are you sure?") == true) {
+
+                lcid = span1.innerHTML;
+
+
+
+                customer = td3.innerHTML;
+                address = td4.innerHTML;
+                servicetype = td5.innerHTML;
+                
+                var date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const localDate = year + month +day ;
+                const time = date.toTimeString();
+           
+                const LDate = year +"-"+ month +"-"+day ;
+                const localTime = time.split(' ')[0];
+                const hr = (date.getHours()).toString();
+                const min = (date.getMinutes()).toString();
+                const sec= (date.getSeconds()).toString();
+                let truncatedDate = localDate.substring(2); 
+
+                var docket = "TR"+truncatedDate+hr+min+sec;
+
+
+                const usersRef = ref(db, "trplcfaultlist"); 
+
+                const q = query(usersRef, orderByChild("LCID"), equalTo(lcid));
+                get(q).then((snapshot) => {
+                if (snapshot.exists()) {
+                   alert("Docket is pending against this circuit");
+
+                } else {
+                   
+
+                    set(ref(db,"trplcfaultlist/"+docket+"/"),
+                {
+                    Customer: customer,
+                    LCID: lcid,
+                    PrabalDocketID: docket,
+                    ServiceType: servicetype,
+                    Address: address,
+                    OpenTime: LDate +" "+localTime,
+                    Priority: "Normal",
+                    Status: "INPROGRESS",
+                    isPrabalplus: "False",
+                    isMatchedwithPrabalplus: "False"
+                    // BookedIn: "NIL"
+                    
+                    
+                                        
+                }).then(()=>{
+                    alert("Docket ID: "+docket+" is created successfully !");
+                    //history.back();
+                    //window.open("lclist.html");
+                }) 
+                .catch((error)=>{
+                 //alert(error);
+            });
+
+                }
+            }).catch((error) => {
+                console.error(error);
+            });
+
+
+           
+
+
+
+
+        }
+
+            }
+
+
+
+
+            
+
+
+
+
+            td3.innerHTML = customer;
+            td4.innerHTML = address;
+            
+            td5.innerHTML = ckttype;
+            td6.innerHTML = bw;
+            
+            td7.innerHTML = media;
+            td8.innerHTML = "Fault History";
+            td8.style.cursor ="pointer";
+
+            td8.style.color = 'blue';
+            td8.style.fontWeight ="bold";
+            
+
+            td8.onclick = function(){
+                var cktid = lcid;
+                localStorage.setItem("lcid",cktid);
+                window.open("lcfaulthistory.html", '_blank');
+            }
+            
+            trow.appendChild(tdCheckbox);
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+            trow.appendChild(td7);
+            trow.appendChild(td8);
+            
+
+
+            tbody.appendChild(trow);
+
+
+        }
+
+                // Function to create bulk dockets
+        function createBulkDockets() {
+            const faultType = document.getElementById('bulk-faulttype').value;
+            const assignedTo = document.getElementById('bulk-assignedto').value;
+            const priority = document.getElementById('bulk-priority').value;
+            
+            if (!faultType || !assignedTo) {
+                alert("Please select both Fault Type and Assigned To");
+                return;
+            }
+            
+            const selectedRows = document.querySelectorAll('.row-checkbox:checked');
+            if (selectedRows.length === 0) {
+                alert("Please select at least one circuit");
+                return;
+            }
+            
+            if (!confirm(`Create ${selectedRows.length} dockets?`)) {
+                return;
+            }
+            
+            let createdCount = 0;
+            let errorCount = 0;
+            const totalRows = selectedRows.length;
+
+            // Create a base timestamp for all dockets in this batch
+    var date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDate = year + month + day;
+    const time = date.toTimeString();
+    const LDate = year + "-" + month + "-" + day;
+    const localTime = time.split(' ')[0];
+    const hr = (date.getHours()).toString().padStart(2, '0');
+    const min = (date.getMinutes()).toString().padStart(2, '0');
+    const sec = (date.getSeconds()).toString().padStart(2, '0');
+    let truncatedDate = localDate.substring(2);
+    
+    // Process each selected row sequentially to avoid race conditions
+    async function processRows() {
+        for (let i = 0; i < selectedRows.length; i++) {
+            const checkbox = selectedRows[i];
+            const lcid = checkbox.dataset.lcid;
+            const customer = checkbox.dataset.customer;
+            const address = checkbox.dataset.address;
+            const servicetype = checkbox.dataset.servicetype;
+            
+            // Generate unique docket ID for each row
+            const uniqueSuffix = i.toString().padStart(3, '0'); // Use index instead of counter
+            var docket = "TR" + truncatedDate + hr + min + uniqueSuffix;
+            
+            try {
+                // Check if docket already exists
+                const usersRef = ref(db, "trplcfaultlist"); 
+                const q = query(usersRef, orderByChild("LCID"), equalTo(lcid));
+                const snapshot = await get(q);
+                
+                if (snapshot.exists()) {
+                    errorCount++;
+                    console.log("Docket already exists for LCID: " + lcid);
+                } else {
+                    // Create docket in lcfaultrecords
+                    await set(ref(db, "lcfaultrecords/" + docket + "/"), {
+                        Customer: customer,
+                        LCID: lcid,
+                        PrabalDocketID: docket,
+                        ServiceType: servicetype,
+                        Address: address,
+                        OpenTime: LDate + " " + localTime,
+                        AssignDate: LDate,
+                        AssignTime: localTime,
+                        FaultType: faultType,
+                        assignedto_workgroup: assignedTo,
+                        assignedby_workgroup: "LeasedLine",
+                        Priority: priority,
+                        Comment: "LeasedLine to "+assignedTo+"("+LDate+" "+localTime+"):",
+                        Status: "OPEN",
+                        isPrabalplus: "False",
+                        isMatchedwithPrabalplus: "False"
+                    });
+                    
+                    // Create docket in trplcfaultlist
+                    await set(ref(db, "trplcfaultlist/" + docket + "/"), {
+                        Customer: customer,
+                        LCID: lcid,
+                        PrabalDocketID: docket,
+                        ServiceType: servicetype,
+                        Address: address,
+                        OpenTime: LDate + " " + localTime,
+                        Priority: priority,
+                        Status: "ASSIGNED",
+                        isPrabalplus: "False",
+                        isMatchedwithPrabalplus: "False"
+                    });
+                    
+                    createdCount++;
+                    console.log("Docket created: " + docket);
+                }
+            } catch (error) {
+                errorCount++;
+                console.error("Error creating docket for LCID " + lcid + ": " + error);
+            }
+            
+            // Update progress after each row
+            console.log(`Progress: ${createdCount + errorCount}/${totalRows}`);
+        }
+        
+        // Final summary
+        alert(`Bulk docket creation completed!\nCreated: ${createdCount}\nSkipped (already exists): ${errorCount}`);
+         bulkDocketBtn.textContent = 'BULK DOCKET';
+        resetBulkDocketUI();
+    }
+    
+    // Start processing
+    processRows();
+
+            
+        //     selectedRows.forEach(checkbox => {
+        //         const lcid = checkbox.dataset.lcid;
+        //         const customer = checkbox.dataset.customer;
+        //         const address = checkbox.dataset.address;
+        //         const servicetype = checkbox.dataset.servicetype;
+                
+        //         var date = new Date();
+        //         const year = date.getFullYear();
+        //         const month = String(date.getMonth() + 1).padStart(2, '0');
+        //         const day = String(date.getDate()).padStart(2, '0');
+        //         const localDate = year + month + day;
+        //         const time = date.toTimeString();
+        //         const LDate = year + "-" + month + "-" + day;
+        //         const localTime = time.split(' ')[0];
+        //         const hr = (date.getHours()).toString();
+        //         const min = (date.getMinutes()).toString();
+        //         const sec = (date.getSeconds()).toString();
+        //         let truncatedDate = localDate.substring(2); 
+        //         var docket = "TR" + truncatedDate + hr + min + sec + createdCount;
+                
+        //         const usersRef = ref(db, "trplcfaultlist"); 
+        //         const q = query(usersRef, orderByChild("LCID"), equalTo(lcid));
+                
+        //         get(q).then((snapshot) => {
+        //             if (snapshot.exists()) {
+        //                 errorCount++;
+        //                 console.log("Docket already exists for LCID: " + lcid);
+        //             } else {
+        //                 set(ref(db, "lcfaultrecords/" + docket + "/"), {
+        //                     Customer: customer,
+        //                     LCID: lcid,
+        //                     PrabalDocketID: docket,
+        //                     ServiceType: servicetype,
+        //                     Address: address,
+        //                     OpenTime: LDate + " " + localTime,
+        //                     AssignDate:LDate,
+        //                     AssignTime:localTime,
+        //                     FaultType: faultType,
+        //                     assignedto_workgroup: assignedTo,
+        //                     assignedby_workgroup:"LeasedLine",
+        //                     Priority: priority,
+        //                     Status: "OPEN",
+        //                     isPrabalplus: "False",
+        //                     isMatchedwithPrabalplus: "False"
+        //                 }).then(() => {
+        //                     createdCount++;
+        //                     console.log("Docket created: " + docket);
+
+        //                        set(ref(db,"trplcfaultlist/"+docket+"/"),
+        //                     {
+        //                         Customer: customer,
+        //                         LCID: lcid,
+        //                         PrabalDocketID: docket,
+        //                         ServiceType: servicetype,
+        //                         Address: address,
+        //                         OpenTime: LDate +" "+localTime,
+        //                         Priority: "Normal",
+        //                         Status: "ASSIGNED",
+        //                         isPrabalplus: "False",
+        //                         isMatchedwithPrabalplus: "False"
+        //                         // BookedIn: "NIL"
+                                
+                                
+                                                    
+        //                     }).then(()=>{
+        //                         //alert("Docket ID: "+docket+" is created successfully !");
+        //                         //history.back();
+        //                         //window.open("lclist.html");
+        //                     }) 
+        //                     .catch((error)=>{
+        //                     //alert(error);
+        //                 });
+                            
+        //                     // Update progress
+        //                     if (createdCount + errorCount === selectedRows.length) {
+        //                         alert(`Bulk docket creation completed!\nCreated: ${createdCount}\nSkipped (already exists): ${errorCount}`);
+        //                         resetBulkDocketUI();
+        //                     }
+        //                 }).catch((error) => {
+        //                     errorCount++;
+        //                     console.error("Error creating docket: " + error);
+        //                 });
+        //             }
+        //         }).catch((error) => {
+        //             errorCount++;
+        //             console.error(error);
+        //         });
+        //     });
+         }
+        
+        // Function to reset bulk docket UI
+        function resetBulkDocketUI() {
+            bulkDocketContainer.classList.remove('show');
+            document.querySelectorAll('.row-checkbox').forEach(checkbox => {
+                checkbox.checked = false;
+                checkbox.closest('tr').classList.remove('bulk-docket-row');
+            });
+            selectAllCheckbox.checked = false;
+            document.getElementById('bulk-faulttype').value = '';
+            document.getElementById('bulk-assignedto').value = '';
+            document.getElementById('bulk-priority').value = 'Normal';
+        }
+        
+        // Event listeners for bulk docket functionality
+        selectAllCheckbox.addEventListener('change', function() {
+            const checkboxes = document.querySelectorAll('.row-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = this.checked;
+                if (this.checked) {
+                    checkbox.closest('tr').classList.add('bulk-docket-row');
+                } else {
+                    checkbox.closest('tr').classList.remove('bulk-docket-row');
+                }
+            });
+            updateBulkDocketButton();
+        });
+        
+        tbody.addEventListener('change', function(e) {
+            if (e.target.classList.contains('row-checkbox')) {
+                if (e.target.checked) {
+                    e.target.closest('tr').classList.add('bulk-docket-row');
+                } else {
+                    e.target.closest('tr').classList.remove('bulk-docket-row');
+                    selectAllCheckbox.checked = false;
+                }
+                updateBulkDocketButton();
+            }
+        });
+        
+        function updateBulkDocketButton() {
+            const selectedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            if (selectedCount > 0) {
+                bulkDocketBtn.textContent = `BULK DOCKET (${selectedCount} SELECTED)`;
+            } else {
+                bulkDocketBtn.textContent = 'BULK DOCKET';
+            }
+        }
+        
+        bulkDocketBtn.addEventListener('click', function() {
+            const selectedCount = document.querySelectorAll('.row-checkbox:checked').length;
+            if (selectedCount === 0) {
+                alert("Please select at least one circuit");
+                return;
+            }
+            bulkDocketContainer.classList.add('show');
+        });
+        
+        createBulkDocketsBtn.addEventListener('click', createBulkDockets);
+        
+        cancelBulkDocketsBtn.addEventListener('click', resetBulkDocketUI);
+
+        function AddAllItemsToTable(lclist){
+            slno = 0;
+            tbody.innerHTML = "";
+            lclist.forEach(element => {
+                AddDataToTable(element.lcid,element.customer,element.address,element.ckttype,element.bw,element.media);
+            });
+
+        }
+
+       
+        import { getDatabase, ref, child, onValue, get, set,update,query, orderByChild, equalTo} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        const db = getDatabase();
+
+        
+            function GetAllDataOnce(){
+            const dbref = ref(db);
+
+            get(child(dbref,"trplccxnlist")).then((snapshot)=>{
+                var lccxnlist=[];
+                snapshot.forEach(childSnapshot => {
+                    lccxnlist.push(childSnapshot.val());
+                    //console.log(prabal);
+
+                });
+                AddAllItemsToTable(lccxnlist);
+                searchcount.innerText = slno;
+                spinner.stop();
+                loaderContainer.style.display = "none";
+               
+            });
+            
+        }       
+       // window.onload = GetAllDataOnce();
+
+        window.onload = function() {
+    GetAllDataOnce();
+
+    // attach button click here
+    const btn_faultcount = document.getElementById("btn_faultcount");
+    btn_faultcount.addEventListener("click", () => {
+        window.open("lcfaultcount.html", "_blank");
+    });
+};
+
+
+        lcfilter.addEventListener('keyup', function(){
+            let searchitem = lcfilter.value.toUpperCase();
+            //let searchtext = document.querySelector('#searchtext');
+            //searchtext.innerText = searchitem;
+            console.log(searchitem);
+
+            const dbref = ref(db);
+            get(child(dbref,"trplccxnlist")).then((snapshot)=>{
+                var filteredlc=[];
+                snapshot.forEach(childSnapshot => {
+                                       
+                     if(childSnapshot.val().lcid.toUpperCase().indexOf(searchitem) > -1
+                    || childSnapshot.val().customer.toUpperCase().indexOf(searchitem) > -1
+                || childSnapshot.val().address.toUpperCase().indexOf(searchitem) > -1
+                || childSnapshot.val().ckttype.toUpperCase().indexOf(searchitem) > -1 
+                || childSnapshot.val().media.toUpperCase().indexOf(searchitem) > -1 ){
+                     filteredlc.push(childSnapshot.val());
+                     }
+                    
+                   
+                  
+                    
+                                  
+                    
+                   
+                });
+                AddAllItemsToTable(filteredlc);
+                searchcount.innerText = slno;
+                
+            if (searchitem == ""){
+                GetAllDataOnce();
+                    }
+                });
+
+
+
+                  });
+        
+
+
+        var btn_export = document.getElementById('btn_export');
+        //searchcount.style.marginLeft = "200px";
+        searchcount.style.marginTop = "10px";
+        btn_export.style.marginLeft = "700px";
+        btn_export.style.marginRight = "100px";
+        btn_export.style.marginTop = "10px";
+
+        btn_export.addEventListener('click',exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+           
+        $('#lclist').table2excel({
+		exclude: ".no-export",
+		filename: "download.xls",
+		fileext: ".xls",
+		exclude_links: true,
+		exclude_inputs: true
+	});
+} 
+
+        
+
+
+    </script>
+</body>
+</html>

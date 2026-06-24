@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fault Report - Last 6 Months</title>
+    <link rel="stylesheet" href="styles.css"> 
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+
+       <div class="loader-container" id="loader"></div>
+    <div style="top: 40px;" class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+          
+            <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+      <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button><br><br>
+
+        <div class="container">
+    <h3 class="text-center" style="margin-top:20px;">Fault Count Report (Last 6 Months)</h3>
+
+    <!-- Search box -->
+    <div class="form-group" style="margin-top:20px; max-width:400px;">
+      <input type="text" id="searchBox" class="form-control" placeholder="Search" >
+    </div>
+
+    <table id="faultTable" class="table table-bordered " style="margin-top:20px;">
+      <thead>
+        <tr>
+          <th>SL</th>
+          <th>LCID</th>
+          <th>CUSTOMER</th>
+          <th>ADDRESS</th>
+          <th>FAULT COUNT IN LAST 6 MONTHS</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="faultTableBody"></tbody>
+    </table>
+  </div>
+       
+           
+      </div>
+
+
+    <script src="script.js"></script>
+  <script type="module">
+    import { app } from "./firebase-config.js";
+    import { getDatabase, ref, child, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+    const db = getDatabase();
+    let faultArray = []; // global to store processed data
+
+    async function loadFaultReport() {
+      const dbref = ref(db);
+
+      // Fetch LCID + customer + address
+      const lcidSnap = await get(child(dbref, "trplccxnlist"));
+      let lcidInfo = {};
+      if (lcidSnap.exists()) {
+        lcidSnap.forEach(childSnap => {
+          const data = childSnap.val();
+          lcidInfo[data.lcid] = {
+            customer: data.customer || "",
+            address: data.address || ""
+          };
+        });
+      }
+
+      // Fetch faults from dockethistory
+      const faultSnap = await get(child(dbref, "dockethistory"));
+      let faultData = [];
+      if (faultSnap.exists()) {
+        faultSnap.forEach(childSnap => {
+          faultData.push(childSnap.val());
+        });
+      }
+
+      // cutoff = 6 months ago
+      const cutoffDate = new Date();
+      cutoffDate.setMonth(cutoffDate.getMonth() - 6);
+
+      // Count faults
+      let faultCount = {};
+      Object.keys(lcidInfo).forEach(lcid => faultCount[lcid] = 0);
+
+      faultData.forEach(fault => {
+        const lcid = fault.LCID;
+        const openTime = fault.OpenTime;
+        if (lcid && openTime) {
+          const faultDate = new Date(openTime.split(" ")[0]);
+          if (faultDate >= cutoffDate) {
+            if (!faultCount[lcid]) faultCount[lcid] = 0;
+            faultCount[lcid]++;
+          }
+        }
+      });
+
+      // Prepare data
+      faultArray = Object.keys(lcidInfo).map(lcid => ({
+        lcid: lcid,
+        customer: lcidInfo[lcid].customer,
+        address: lcidInfo[lcid].address,
+        count: faultCount[lcid] || 0
+      }));
+
+      // Sort desc
+      faultArray.sort((a, b) => b.count - a.count);
+
+      renderTable(faultArray);
+    }
+
+    function renderTable(data) {
+      const tbody = document.getElementById("faultTableBody");
+      tbody.innerHTML = "";
+
+      data.forEach((item, index) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${item.lcid}</td>
+          <td>${item.customer}</td>
+          <td>${item.address}</td>
+          <td>${item.count}</td>
+          <td><span class="text-primary" style="cursor:pointer; font-weight:bold;">Fault History</span></td>
+        `;
+        // click handler
+        tr.querySelector("span").onclick = () => {
+          localStorage.setItem("lcid", item.lcid);
+          window.open("lcfaulthistory.html", "_blank");
+        };
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Search filter
+    document.getElementById("searchBox").addEventListener("keyup", function () {
+      const searchVal = this.value.toLowerCase();
+      const filtered = faultArray.filter(item =>
+        item.lcid.toLowerCase().includes(searchVal) ||
+        item.customer.toLowerCase().includes(searchVal) ||
+        item.address.toLowerCase().includes(searchVal)
+      );
+      renderTable(filtered);
+    });
+
+    window.onload = loadFaultReport;
+  </script>
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Find Closed Work Orders</title>
+
+  <script type="module" src="scrollingMessage.js"></script>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css" />
+
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<style>
+  .loader-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(255, 255, 255, 0.8);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+  }
+  .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+  }
+</style>
+<body>
+
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar" style="top: 40px;">
+    <button class="close-btn" id="close-btn">&times;</button>
+    <ul class="menu">
+      <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+    <br><br>
+
+    <h3>Closed Work Order Details</h3>
+
+    <div id="order-details" style="display: none; margin-top: 20px;">
+      <table class="table table-bordered" id="order-info-table">
+        <thead>
+          <tr>
+            <th>CRM Order No</th>
+            <th>Order Date</th>
+            <th>LC ID</th>
+            <th>Customer</th>
+            <th>Address</th>
+            <th>Order Type</th>
+            <th>Circuit Type</th>
+            <th>Priority</th>
+            <th>Commissioned</th>
+            <th>Commission Date</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td id="crm-display"></td>
+            <td id="date-display"></td>
+            <td id="lcid-display"></td>
+            <td id="customer-display"></td>
+            <td id="address-display"></td>
+            <td id="order-display"></td>
+            <td id="circuit-display"></td>
+            <td id="priority-display"></td>
+            <td id="commissioned-display"></td>
+            <td id="commissiondate-display"></td>
+          </tr>
+        </tbody>
+      </table>
+      <br>
+      <p><strong>Assigned Sections:</strong></p>
+      <table class="table table-bordered" id="section-table" style="width: 100%;">
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Assigned Date</th>
+            <th>Initiator Comment</th>
+            <th>Acknowledged</th>
+            <th>Status</th>
+            <th>Completed</th>
+            <th>Verified</th>
+            <th>Close Date</th>
+            <th>Close Comment</th>
+          </tr>
+        </thead>
+        <tbody id="section-table-body">
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <script src="script.js"></script>
+  <script type="module" src="auth-check.js"></script>
+  <script type="module">
+    import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+    const db = getDatabase();
+
+    // Load the closed work order based on the crmorder stored in localStorage
+    async function loadClosedWorkOrder() {
+      // Get required values from localStorage
+      const crmOrder = localStorage.getItem("crmorder");
+      const userpriv = localStorage.getItem("userpriv");  // may be used for future role-based access
+
+      if (!crmOrder) {
+        alert("No CRM Order number available in local storage.");
+        return;
+      }
+
+      const orderRef = ref(db, `closedworkorders/${crmOrder}`);
+      try {
+        const snapshot = await get(orderRef);
+        if (snapshot.exists()) {
+          const data = snapshot.val();
+
+          // Fill the order details in the table
+          document.getElementById("crm-display").textContent = data.CRMOrder || 'N/A';
+          document.getElementById("date-display").textContent = data.OrderDate || 'N/A';
+          document.getElementById("lcid-display").textContent = data.LCID || 'N/A';
+          document.getElementById("customer-display").textContent = data.Customer || 'N/A';
+          document.getElementById("address-display").textContent = data.Address || 'N/A';
+          document.getElementById("order-display").textContent = data.OrderType || 'N/A';
+          document.getElementById("circuit-display").textContent = data.ServiceType || 'N/A';
+          document.getElementById("priority-display").textContent = data.Priority || 'N/A';
+          document.getElementById("commissioned-display").textContent = data.isCommission ? "Yes" : "No";
+          document.getElementById("commissiondate-display").textContent = data.CommissionDate || '-';
+
+          // Populate the Assigned Sections table (read-only)
+          const sectionTableBody = document.getElementById("section-table-body");
+          sectionTableBody.innerHTML = '';
+          if (data.sections) {
+            Object.entries(data.sections).forEach(([secName, secData]) => {
+              const row = document.createElement("tr");
+              row.innerHTML = `
+                <td>${secName}</td>
+                <td>${secData.AssignDate || '-'}</td>
+                <td>${secData.InitialComment || '-'}</td>
+                <td>${secData.isAck ? "Yes" : "No"}</td>
+                <td>${secData.Status || '-'}</td>
+                <td>${secData.isCompleted ? "Yes" : "No"}</td>
+                <td>${secData.isVerified ? "Yes" : "No"}</td>
+                <td>${secData.CloseDate || '-'}</td>
+                <td>${secData.CloseComment || '-'}</td>
+              `;
+              sectionTableBody.appendChild(row);
+            });
+          }
+
+          document.getElementById("order-details").style.display = "block";
+        } else {
+          alert("No closed work order found for the specified CRM Order number.");
+        }
+      } catch (error) {
+        console.error(error);
+        alert("Error loading closed work order.");
+      }
+    }
+
+    loadClosedWorkOrder();
+  </script>
+</body>
+</html>
+

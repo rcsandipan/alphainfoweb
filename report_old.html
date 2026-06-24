@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<style>
+    loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+   /* Target SweetAlert's default popup class */
+.swal2-popup {
+    width: 600px !important; /* Set the width */
+    font-size: 16px !important; /* Increase font size */
+}
+   .highlight { 
+       background-color: rgb(236, 109, 109) !important; 
+       color: white !important; 
+   }
+    /* Add this CSS to position the open-btn */
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+   
+</style>
+<body>
+    <div class="loader-container" id="loader"></div>
+    <br><br>
+    <div style="top: 40px;" class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+            <li id="homepage"><a href="lccarehome.html">Home</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+            <li id="pendingfaults"><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg"><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+            <li id="myprov"><a href="myprovision.html">My Pending Provision</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href="p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="changepassword"><a href="changepassword.html">Change Password</a></li>
+            <li id="logout"><a href="logOut.html">LogOut</a></li>
+        </ul>
+    </div>
+    <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button><br><br>
+        <div style="display: flex;justify-content: space-evenly;">
+            <div>Total Count: <b id="searchcount"></b> </div>
+            <div class="caption3"><input class="input" id="input1" type="text" placeholder="Search" ></div>
+            <div><button id="btn_export" class="btn btn-default">EXPORT TO EXCEL</button> </div>
+            <div><button id="btn_summary" class="btn btn-default">FAULT SUMMARY</button> </div>
+        </div>
+        <br>
+        <div class="container">
+            <table id="reporttable" class="table table-bordered">
+                <thead id="thead1">
+                    <th style="text-align: center;">SL</th>
+                    <th style="text-align: center;">DOCKET</th>
+                    <th style="text-align: center;">DATE</th>
+                    <th style="text-align: center;">CUSTOMER</th>
+                    <th style="text-align: center;">ADDRESS</th>
+                    <th style="text-align: center;">PENDING WITH</th>
+                    <th style="text-align: center;">COMMENT</th>
+                    <th style="text-align: center;">DOWNTIME</th>
+                </thead>
+                <tbody id="tbody1"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+   
+    <script src="script.js"></script>
+    <script type="module">
+        const loaderContainer = document.getElementById("loader");
+        const spinner = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer);
+        setInterval(() => {
+            location.reload();
+        }, 180000);
+
+        import { app } from "./firebase-config.js";
+        import { getDatabase, ref, child, onValue, get, set, update } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+
+        const db = getDatabase();
+
+        var slno = 0;
+        var lcrole;
+        var reporttable = document.getElementById("reporttable");
+        var tbody1 = document.getElementById("tbody1");
+        var searchcount = document.getElementById('searchcount');
+        var btnsummary = document.getElementById('btn_summary');
+        var durationobj = []; // Initialize as an array
+
+        let lcfaultfilter = document.getElementById("input1");
+        let lcid, customer, address, servicetype;
+        const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+        btnsummary.onclick = function () {
+            window.location.href = "faultsummary.html";
+        }
+
+        if (currentuser) {
+            if (userpriv == "LLU" || userpriv == "SAU") {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+            }
+
+            if (userpriv == "GM") {
+            }
+            if(userpriv == "LLA")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('myprov').style.display = "none";
+                
+            }
+        }
+
+        function AddDataToTable(LCID, PrabalDocketID, Customer, ServiceType, Address, FaultType, OpenTime, Priority, AssignDate, AssignTime, assignedby_workgroup, assignedto_workgroup, Status, Comment, event_ID) {
+            let trow = document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td4_1 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td5_1 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let viewbtn = document.createElement('button');
+            viewbtn.innerText = "VIEW";
+            viewbtn.className = "btn btn-default";
+            td5_1.append(viewbtn);
+            td1.innerHTML = ++slno;
+            td2.innerHTML = PrabalDocketID;
+            var sectioncomment = Comment;
+
+            td2.style.cursor = "pointer";
+            td2.onclick = function () {
+                var prabaldocketid = PrabalDocketID;
+                localStorage.setItem("prabaldocketid", prabaldocketid);
+                window.location.href = "prabaldocketview.html";
+            }
+
+            td3.innerHTML = OpenTime;
+            td4.innerHTML = Customer;
+            td4_1.innerHTML = Address;
+            td5.innerHTML = assignedto_workgroup;
+           
+            viewbtn.onclick = function () {
+                // Dynamic message (can come from a variable, API, etc.)
+                const message = sectioncomment;
+
+                // Words to style
+                const wordsToBold = ["LeasedLine", "NIB", "CNTx-NER", "Tx-West", "Tx-South", "Tx-North", "BBM-AGT", "BBM-GB", "BBM-Khowai", "BBM-Dhalai",
+                    "BBM-Unakoti", "BBM-North", "BBM-Bishalgarh", "BBM-Sonamura", "BBM-Gomati", "BBM-South", "CM-Maintenance"];
+
+                // Function to add HTML tags to specific words
+                let styledMessage = message;
+
+                // Use regular expressions to find and replace occurrences of words in wordsToBold
+                wordsToBold.forEach(word => {
+                    const regex = new RegExp(`(${word})`, "gi"); // Case-insensitive global match
+                    styledMessage = styledMessage.replace(regex, `<strong><span style="color: red;">$1</span></strong>`); // Wrap matched word in <strong>
+                });
+
+                // Show SweetAlert with the styled message
+                Swal.fire({
+                    title: 'Section Comment',
+                    html: styledMessage, // Use the dynamically styled message
+                    // icon: 'info',
+                    confirmButtonText: 'Close'
+                });
+            };
+
+
+
+
+
+
+            td5.style.cursor = "pointer";
+            td5.onclick = function () {
+                FilterbySection(td5.innerText);
+            }
+
+            td6.innerHTML = getDuration(OpenTime);
+
+            function getDuration(startDate) {
+                const start = new Date(startDate);
+                const end = new Date();
+                const diffMs = end - start;
+                const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((diffMs % (3600000)) / (1000 * 60));
+                return `${days} day(s) ${hours} hrs and ${minutes} Mins`;
+            }
+
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td4_1);
+            trow.appendChild(td5);
+            trow.appendChild(td5_1);
+            trow.appendChild(td6);
+            let durationDays = parseInt(td6.innerText.split(" ")[0]);
+            if (durationDays >= 3) {
+                trow.classList.add("highlight");
+            }
+            tbody1.appendChild(trow);
+        }
+
+        function AddAllItemsToTable(reportlist) {
+            slno = 0;
+            tbody1.innerHTML = "";
+            reportlist.forEach(element => {
+                AddDataToTable(element.LCID, element.PrabalDocketID, element.Customer, element.ServiceType, element.Address, element.FaultType, element.OpenTime, element.Priority, element.AssignDate, element.AssignTime, element.assignedby_workgroup, element.assignedto_workgroup, element.Status, element.Comment, element.event_ID);
+            });
+        }
+
+        function GetAllDataOnce() {
+            const dbref = ref(db);
+            function GetData() {
+                get(child(dbref, "lcfaultrecords")).then((snapshot) => {
+                    var report = [];
+                    durationobj = []; // Reset the array
+                    snapshot.forEach(childSnapshot => {
+                        const start = new Date(childSnapshot.val().OpenTime);
+                        const end = new Date();
+                        const diffMs = end - start;
+
+                        const faultData = {
+                            "LCID": childSnapshot.val().LCID,
+                            "PrabalDocketID": childSnapshot.val().PrabalDocketID,
+                            "Customer": childSnapshot.val().Customer,
+                            "ServiceType": childSnapshot.val().ServiceType,
+                            "Address": childSnapshot.val().Address,
+                            "FaultType": childSnapshot.val().FaultType,
+                            "OpenTime": childSnapshot.val().OpenTime,
+                            "Priority": childSnapshot.val().Priority,
+                            "AssignDate": childSnapshot.val().AssignDate,
+                            "AssignTime": childSnapshot.val().AssignTime,
+                            "assignedby_workgroup": childSnapshot.val().assignedby_workgroup,
+                            "assignedto_workgroup": childSnapshot.val().assignedto_workgroup,
+                            "Status": childSnapshot.val().Status,
+                            "Comment": childSnapshot.val().Comment,
+                            "event_ID": childSnapshot.val().event_ID,
+                            "duration": diffMs
+                        };
+
+                        if (currentuser) {
+                            if (userpriv == "SAU" || userpriv == "LLU" || userpriv == "GM" || userpriv == "DGM" || userpriv == "AGMLL" || userpriv == "LLA"
+
+                            ) {
+                                lcrole = "LeasedLine";
+                                report.push(faultData);
+                            }
+                       
+                            if(userpriv == "NIBU"){
+                if(  faultData.assignedto_workgroup == "NIB"){
+                lcrole ="NIB";
+                 report.push(  faultData);}
+                }
+                    
+                if(userpriv == "CM-Mtce"){
+                if(  faultData.assignedto_workgroup == "CM-Maintenance"){
+                lcrole ="CM-Maintenance";
+                 report.push(  faultData);}
+                }
+
+
+
+                if(userpriv == "TXWU"){
+                if(  faultData.assignedto_workgroup == "Tx-West"){
+                lcrole = "Tx-West"
+                 report.push(  faultData);}
+                }
+
+
+                if(userpriv == "CNTU"){
+                if(  faultData.assignedto_workgroup == "CNTx-NER"){
+                lcrole = "CNTx-NER"
+                 report.push(  faultData);}
+                }
+
+
+                if(userpriv == "TXNU"){
+                if(  faultData.assignedto_workgroup == "Tx-North"){
+                lcrole = "Tx-North"
+                 report.push(  faultData);}
+                }
+                if(userpriv == "TXSU"){
+                if(  faultData.assignedto_workgroup == "Tx-South"){
+                lcrole = "Tx-South"
+                 report.push(  faultData);}
+                }
+
+
+                if(userpriv == "BBM-AGT"){
+                if(  faultData.assignedto_workgroup == "BBM-AGT"){
+                lcrole = "BBM-AGT"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-GB"){
+                if(  faultData.assignedto_workgroup == "BBM-GB"){
+                lcrole = "BBM-GB"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-Bishalgarh"){
+                if(  faultData.assignedto_workgroup == "BBM-Bishalgarh"){
+                lcrole = "BBM-Bishalgarh"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-Sonamura"){
+                if(  faultData.assignedto_workgroup == "BBM-Sonamura"){
+                lcrole = "BBM-Sonamura"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-Gomati"){
+                if(  faultData.assignedto_workgroup == "BBM-Gomati"){
+                lcrole = "BBM-Gomati"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-South"){
+                if(  faultData.assignedto_workgroup == "BBM-South"){
+                lcrole = "BBM-South"
+                 report.push(  faultData);}
+      }
+
+
+if(userpriv == "BBM-Khowai"){
+                if(  faultData.assignedto_workgroup == "BBM-Khowai"){
+                lcrole = "BBM-Khowai"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-Dhalai"){
+                if(  faultData.assignedto_workgroup == "BBM-Dhalai"){
+                lcrole = "BBM-Dhalai"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-Unakoti"){
+                if(  faultData.assignedto_workgroup == "BBM-Unakoti"){
+                lcrole = "BBM-Unakoti"
+                 report.push(  faultData);}
+      }
+if(userpriv == "BBM-North"){
+                if(  faultData.assignedto_workgroup == "BBM-North"){
+                lcrole = "BBM-North"
+                 report.push(  faultData);}
+      }
+      if(userpriv == "AGMTX"){
+                if(  faultData.assignedto_workgroup == "Tx-West"
+            ||   faultData.assignedto_workgroup == "Tx-South"
+            ||   faultData.assignedto_workgroup == "Tx-North" ){
+                lcrole = "AGMTX"
+                 report.push(  faultData);}
+      }
+      if(userpriv == "AGMW"){
+                if(  faultData.assignedto_workgroup == "BBM-AGT"
+            ||   faultData.assignedto_workgroup == "BBM-GB"
+            ||   faultData.assignedto_workgroup == "BBM-Bishalgarh"
+            ||   faultData.assignedto_workgroup == "BBM-Sonamura"
+            ||   faultData.assignedto_workgroup == "Tx-Khowai" ){
+                lcrole = "AGMW"
+                 report.push(  faultData);}
+      }
+      if(userpriv == "AGMN"){
+                if(  faultData.assignedto_workgroup == "BBM-Dhalai"
+            ||   faultData.assignedto_workgroup == "BBM-North"
+            ||   faultData.assignedto_workgroup == "BBM-Unakoti"
+            ||   faultData.assignedto_workgroup == "Tx-North"
+             ){
+                lcrole = "AGMN"
+                 report.push(  faultData);}
+      }
+      if(userpriv == "AGMS"){
+                if(  faultData.assignedto_workgroup == "BBM-Gomati"
+            ||   faultData.assignedto_workgroup == "BBM-South"
+            ||   faultData.assignedto_workgroup == "Tx-South"
+           
+             ){
+                lcrole = "AGMS"
+                 report.push(faultData);}
+}
+
+
+
+
+                        }
+
+                        durationobj.push(faultData); // Add to durationobj array
+                    });
+
+                    report.sort((b1, b2) => (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+                    AddAllItemsToTable(report);
+                    searchcount.innerText = slno;
+                    spinner.stop();
+                loaderContainer.style.display = "none";
+                });
+            }
+            GetData();
+        }
+
+        window.onload = GetAllDataOnce;
+
+        lcfaultfilter.addEventListener('keyup', function () {
+            let searchitem = lcfaultfilter.value.toUpperCase();
+            var filteredlcfault = [];
+            durationobj.forEach(fault => {
+                if (
+                    fault.PrabalDocketID.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.Customer.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.Address.toUpperCase().indexOf(searchitem) > -1 ||
+                    fault.assignedto_workgroup.toUpperCase().indexOf(searchitem) > -1
+                ) {
+                    filteredlcfault.push(fault);
+                }
+            });
+            AddAllItemsToTable(filteredlcfault);
+            searchcount.innerText = slno;
+
+            if (searchitem == "") {
+                GetAllDataOnce();
+            }
+        });
+
+        var btn_export = document.getElementById('btn_export');
+        btn_export.addEventListener('click', exportCSVExcel);
+
+        function exportCSVExcel() {
+            $('#reporttable').table2excel({
+                exclude: ".no-export",
+                filename: "download.xls",
+                fileext: ".xls",
+                exclude_links: true,
+                exclude_inputs: true
+            });
+        }
+
+        function FilterbySection(section) {
+            const dbref = ref(db);
+            get(child(dbref, "lcfaultrecords")).then((snapshot) => {
+                var report = [];
+                snapshot.forEach(childSnapshot => {
+                    const start = new Date(childSnapshot.val().OpenTime);
+                    const end = new Date();
+                    const diffMs = end - start;
+
+                    var durationobj = {
+                        "PrabalDocketID": childSnapshot.val().PrabalDocketID,
+                        "OpenTime": childSnapshot.val().OpenTime,
+                        "Customer": childSnapshot.val().Customer,
+                        "Address": childSnapshot.val().Address,
+                        "assignedto_workgroup": childSnapshot.val().assignedto_workgroup,
+                        "duration": diffMs
+                    };
+
+                    if (durationobj.assignedto_workgroup == section) {
+                        report.push(durationobj);
+                    }
+                    report.sort((b1, b2) => (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+                });
+
+                AddAllItemsToTable(report);
+                searchcount.innerText = slno;
+            });
+        }
+    </script>
+</body>
+</html>

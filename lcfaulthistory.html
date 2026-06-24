@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LC Fault History</title>
+    <!-- <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+    }
+    .caption1{
+        display: flex;
+        flex-direction: row;
+    }
+    .caption2{
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+    }
+</style>
+
+<body>
+<div>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+          
+            <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+        </ul>
+      </div>
+    
+
+</div>
+
+<div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+    <div class="caption1"> 
+        <div><h3>LC ID:</h3>  </div>
+        <div><h3 id="lcidtext"></h3></div>
+    </div>
+     <br>
+     <div class="caption2">
+        <div>Total Fault Count: <b id="searchcount"></b></div>
+        <div><button id="btn_export" class="btn btn-success"> EXPORT TO EXCEL</button></div>
+     </div> <br><br>
+    
+    
+    
+
+<div class="container">
+    <table id="lcfaulthistorytable"class="table table-bordered">
+        <thead id="thead">
+            <th> SL</th>
+            <th> DOCKET ID</th>
+            <th> PRIORITY</th>
+            <th> FAULT DATE</th>
+            <th> CLEAR DATE</th>
+            <th> FAULT DURATION</th>
+                                        
+            
+        </thead>
+        <tbody id="tbody1"></tbody>
+       
+    </table>
+</div>
+
+
+
+</div>
+    
+    
+   
+    
+   
+        
+    
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    
+    <script src="script.js"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script type="module">
+        var slno = 0;
+        var tbody = document.getElementById("tbody1");
+        var thead = document.getElementById("thead");
+        // thead.style.display = "none";
+        // tbody.style.display = "none";
+        var searchcount = document.getElementById('searchcount');
+     
+        import { app} from "./firebase-config.js";  
+      
+        var lcid = localStorage.getItem("lcid");
+        
+       
+        console.log(lcid);
+      
+
+
+            function AddDataToTable(PrabalDocketID,Priority,OpenTime,CloseTime,FaultDuration){
+            let trow= document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td6 = document.createElement('td');
+       
+            td1.innerHTML = ++slno;
+
+            // td2.innerHTML = PrabalDocketID;
+            // td2.style.cursor = "pointer";
+            // td2.onmouseover = function(){
+            //     td2.style.color = 'blue';
+            //     td2.style.fontWeight ="bold";
+            // }
+            // td2.onmouseout = function(){
+            //     td2.style.color = 'black';
+            //     td2.style.fontWeight ="normal";
+            // }
+
+            // td2.onclick = function(){
+            //     var prabaldocketid = PrabalDocketID;
+            //     localStorage.setItem("prabaldocketid",prabaldocketid);
+            //     window.location.href ="prabaldocketview.html";
+            //     //window.open("prabaldocketview.html");
+            // }
+
+            const span1 = document.createElement("span");
+            span1.textContent = PrabalDocketID;
+
+            // Create the second <span> element
+            const span2 = document.createElement("span");
+            span2.textContent = "view workflow";
+            span2.style.fontStyle = "italic"; 
+            
+            span2.style.color = "blue";
+            span2.style.cursor = "pointer";
+            // Append both spans to the td
+            td2.appendChild(span1);
+
+           const br = document.createElement("br");
+
+            td2.appendChild(br);
+            td2.appendChild(span2);
+
+             span2.onclick = function () {
+                var prabaldocketid = PrabalDocketID;
+                localStorage.setItem("prabaldocketid", prabaldocketid);
+                window.location.href = "prabaldocketview.html";
+            }
+
+
+
+            td3.innerHTML = Priority;
+            td4.innerHTML = OpenTime;
+            td5.innerHTML = CloseTime;
+            td6.innerHTML = FaultDuration;
+          
+           
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+         
+            tbody.appendChild(trow);
+
+
+
+        }
+        function AddAllItemsToTable(lcfaulthistorylist){
+            slno = 0;
+            tbody.innerHTML = "";
+            lcfaulthistorylist.forEach(element => {
+            AddDataToTable(element.PrabalDocketID,element.Priority,element.OpenTime,element.CloseTime,element.FaultDuration);
+            });
+
+        }
+
+        
+  
+        
+        import { getDatabase, ref, child, onValue, get, update} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+     
+       
+        const db = getDatabase();
+
+       
+            function GetAllDataOnce(){
+            const dbref = ref(db);
+
+            //console.log(inputlcid);
+            get(child(dbref,"lcfaulthistory/"+lcid)).then((snapshot)=>{
+                var lcfaulthistory=[];
+                console.log(lcfaulthistory);
+                snapshot.forEach(childSnapshot => {
+                    lcfaulthistory.push(childSnapshot.val());
+
+                });
+
+                lcfaulthistory.sort((a, b) => {
+                const dateA = new Date(a.OpenTime.replace(/-/g, '/'));
+                const dateB = new Date(b.OpenTime.replace(/-/g, '/'));
+                return dateB - dateA;
+            });
+
+
+                AddAllItemsToTable(lcfaulthistory);
+                searchcount.innerText = slno;
+               
+            });
+            
+        } 
+        window.onload = GetAllDataOnce;
+
+        document.getElementById("lcidtext").innerText = lcid;
+        document.getElementById("lccustomertext").innerText = lccustomer;
+        document.getElementById("lcaddresstext").innerText = lcaddress;
+        document.getElementById("lcservicetypetext").innerText = lcservicetype;
+
+            
+       
+        
+       
+        
+        var btn_export = document.getElementById('btn_export');
+        //searchcount.style.marginLeft = "200px";
+        searchcount.style.marginTop = "10px";
+        btn_export.style.marginLeft = "600px";
+        btn_export.style.marginTop = "10px";
+        btn_export.addEventListener('click',exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+    var wb = XLSX.utils.table_to_book(document.getElementById('lcfaulthistorytable'), { sheet: "Fault History" });
+    XLSX.writeFile(wb, 'FaultHistory.xlsx');
+        // $('#lcfaulthistorytable').table2excel({
+		// exclude: ".no-export",
+		// filename: "download.xls",
+		// fileext: ".xls",
+		// exclude_links: true,
+		// exclude_inputs: true
+	// });
+} 
+
+
+        
+
+
+    </script>
+</body>
+</html>

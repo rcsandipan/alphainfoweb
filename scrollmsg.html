@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enter Scrolling Message</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+ 
+</head>
+<body>
+    <div class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+          
+          <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+          <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+          <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Prabalplus</a></li>
+          <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+          <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+          <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+          <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+          <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+          <li id="myprov"><a href="myprovision.html">My Pending Provision</a></li>
+          <li id="report"><a href="report.html">Report</a></li>
+          <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+          <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+          <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+
+      <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+
+        <h1>Enter Scrolling Message</h1>
+        <input class="form-control" type="text" id="messageInput" placeholder="Enter your message"> <br><br>
+        <button class="btn btn-default" onclick="saveMessage()">Set Message</button>
+        <button class="btn btn-default" onclick="RemoveMessage()"> Clear Message</button>
+      </div>
+
+    <script src="script.js"></script>  
+
+      <script type="module" src="auth-check.js"></script>
+    <script type="module" src="scrollingMessage.js"></script>
+</body>
+</html>

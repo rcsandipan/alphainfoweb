@@ -1,0 +1,113 @@
+<!DOCTYPE html>  
+<html>  
+<head>  
+    <style>  
+        /* Main vertical menu container */  
+        .vertical-menu {  
+            width: 200px;  
+            height: 100vh;  
+            background: #2c3e50;  
+            padding: 20px 0;  
+            position: relative;  
+        }  
+  
+        /* Menu items styling */  
+        .menu-item {  
+            list-style: none;  
+            padding: 12px 20px;  
+            color: #ecf0f1;  
+            cursor: pointer;  
+            transition: background 0.3s;  
+        }  
+  
+        .menu-item:hover {  
+            background: #34495e;  
+        }  
+  
+        /* Submenu container */  
+        .submenu {  
+            display: none;  
+            position: absolute;  
+            left: 100%;  
+            top: 0;  
+            background: #34495e;  
+            min-width: 200px;  
+            height: 100%;  
+        }  
+  
+        /* Nested submenu positioning */  
+        .submenu .submenu {  
+            left: 100%;  
+        }  
+  
+        /* Active state */  
+        .active {  
+            background: #e74c3c;  
+            color: white;  
+        }  
+  
+        /* Main content area */  
+        .content {  
+            flex: 1;  
+            padding: 20px;  
+            background: #f5f6fa;  
+        }  
+    </style>  
+</head>  
+<body>  
+    <div class="container">  
+        <nav class="vertical-menu">  
+            <ul>  
+                <li class="menu-item active">Dashboard</li>  
+                <li class="menu-item">  
+                    Products  
+                    <ul class="submenu">  
+                        <li class="menu-item">Electronics</li>  
+                        <li class="menu-item">  
+                            Clothing  
+                            <ul class="submenu">  
+                                <li class="menu-item">Men</li>  
+                                <li class="menu-item">Women</li>  
+                                <li class="menu-item">Kids</li>  
+                            </ul>  
+                        </li>  
+                        <li class="menu-item">Books</li>  
+                    </ul>  
+                </li>  
+                <li class="menu-item">  
+                    Reports  
+                    <ul class="submenu">  
+                        <li class="menu-item">Sales</li>  
+                        <li class="menu-item">Inventory</li>  
+                    </ul>  
+                </li>  
+                <li class="menu-item">Settings</li>  
+            </ul>  
+        </nav>  
+  
+        <div class="content">  
+            <h1>Main Content Area</h1>  
+            <p>Your content goes here</p>  
+        </div>  
+    </div>  
+  
+    <script>  
+        // Add hover interaction for submenus  
+        document.querySelectorAll('.menu-item').forEach(item => {  
+            item.addEventListener('mouseenter', () => {  
+                const submenu = item.querySelector('.submenu');  
+                if (submenu) {  
+                    submenu.style.display = 'block';  
+                }  
+            });  
+  
+            item.addEventListener('mouseleave', () => {  
+                const submenu = item.querySelector('.submenu');  
+                if (submenu) {  
+                    submenu.style.display = 'none';  
+                }  
+            });  
+        });  
+    </script>  
+</body>  
+</html>

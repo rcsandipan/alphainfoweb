@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Pending Provision Orders</title>
+    <!-- <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+        
+    
+</style>
+
+<body>
+
+    <div>
+        <div class="sidebar" id="sidebar">
+            <button class="close-btn" id="close-btn">&times;</button>
+            <ul class="menu">
+              
+            <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Prabalplus</a></li>
+            <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov" style="display: none;"><a href="pendingprovision.html">Pending Provision</a></li>
+            <li id="myprov"><a href="myprovision.html">My Pending Provision</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+              
+            </ul>
+          </div>
+        
+
+    </div>
+    <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+        <div id="userbuttonset2">
+        
+        
+                   
+             Total Order Count: <b id="searchcount"></b>
+             <button id="btn_export" class="btn btn-default" > EXPORT TO EXCEL</button>
+          
+    
+        </div>
+        <br><br>
+       
+    
+        <div >
+            <table id= "lctable"class="table table-bordered">
+                <thead id="thead">
+                    <th> SL</th>
+               
+                    <th>LC ID</th>
+                    <th> CRM ORDER NO</th>
+                    <th> ORDER DATE</th>
+                    <th>CUSTOMER NAME</th>
+                    <th> ADDRESS</th>
+                    <th>CIRCUIT TYPE</th>
+                    <th> ORDER TYPE</th>
+                    
+                    <th> PENDING (DAYS)</th>
+                    <th> PRIORITY</th>
+                    <th> ASSIGN DATE</th>
+                    <th> ASSIGN TIME</th>
+                    <th> ASSIGNED BY</th>
+                    <th> ASSIGNED TO</th>
+                    <th> STATUS</th>
+                    <th> COMMENT</th>
+                    <th> ACTION</th>
+     
+                    
+                </thead>
+               
+                <tbody id="tbody1">             </tbody>
+            </table>
+        </div>
+            <div class="container">
+    
+                <table id="assigntable" class="table table-bordered">
+                <thead id="thead2">
+                    <th>LC ID</th>
+                    <th>CRM ORDER NO</th>
+                    <th>CUSTOMER NAME</th>
+                    
+                    <th> ADDRESS</th>
+                    <th>CIRCUIT TYPE</th>
+                    <th> ORDER TYPE</th>
+                    <th> WORK DONE</th>
+                                  
+                    <th> ASSIGNED TO</th>
+                    
+                    <th> COMMENT</th>
+                    
+                    <th> ACTION</th>
+    
+                </thead>
+                <tbody id="tbody2"></tbody>
+            </table>
+    
+        </div>
+
+    </div>
+
+  
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="script.js"></script>
+    <script type="module">
+        import { app} from "./firebase-config.js";  
+        var slno = 0;
+        var lcrole;
+        var eventcount;
+        var asscount, receivecount, crmorder;
+        var statusflag, finalcomment;
+        var thead = document.getElementById("thead");
+        var thead2 = document.getElementById("thead2");
+        var tbody = document.getElementById("tbody1");
+        var tbody2 = document.getElementById("tbody2");
+        document.getElementById("assigntable").style.display = "none";
+        const currentuser = localStorage.getItem("currentuser");
+        const userpriv = localStorage.getItem("userpriv");
+        
+        //thead2.style.display ="none";
+        
+
+       
+        var searchcount = document.getElementById('searchcount');
+        function AddDataToTable(LCID,CRMOrder,Customer,ServiceType,Address,OrderType,CRMOrderDate,Priority,AssignDate,AssignTime,assignedby_workgroup,assignedto_workgroup,Status,AssignComment,event_ID){
+            let trow= document.createElement("tr");
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td');
+            let td5 = document.createElement('td');
+            let td6 = document.createElement('td');
+            let td7 = document.createElement('td');
+            let td7_1 = document.createElement('td');
+            let td7_2 = document.createElement('td');
+
+            let td8 = document.createElement('td');
+            let td9 = document.createElement('td');
+            let td10 = document.createElement('td');
+            let td11 = document.createElement('td');
+            let td12 = document.createElement('td');
+
+            let td13 = document.createElement('td');
+            let td14 = document.createElement('td');
+            let td15 = document.createElement('td');
+            //let td16 = document.createElement('td');
+
+            let clsbtn = document.createElement('button');
+            let delbtn = document.createElement('button');
+            clsbtn.className ="btn btn-success";
+            clsbtn.innerText ="CLOSE";
+            delbtn.className ="btn btn-danger";
+            delbtn.innerText ="DELETE";
+            td15.append(clsbtn);
+            
+            delbtn.onclick = function(){
+                if(confirm("Are you sure?") == true)
+                {
+                    remove(ref(db,"pendinglcprovisions/"+ CRMOrder)).then(()=>{
+                    // alert("Data deleted successfully");
+                    // location.reload();
+                }
+            ).catch((error)=>{
+                 alert(error);
+            });
+                   
+
+            
+
+                }
+                         
+               
+            }
+
+            crmorder = CRMOrder;
+            
+            td1.innerHTML = ++slno;
+            td2.innerHTML = LCID;
+
+            td2.style.cursor ="pointer";
+            td2.onmouseover = function(){
+                td2.style.color = 'blue';
+                td2.style.fontWeight ="bold";
+            }
+            td2.onmouseout = function(){
+                td2.style.color = 'black';
+                td2.style.fontWeight ="normal";
+            }
+
+
+            td3.onmouseover = function(){
+                td2.style.color = 'blue';
+                td2.style.fontWeight ="bold";
+            }
+            td3.onmouseout = function(){
+                td2.style.color = 'black';
+                td2.style.fontWeight ="normal";
+            }
+            td2.onclick = function(){
+                var lcid = LCID;
+                localStorage.setItem("lcid",lcid);
+
+                window.open("lcprovhistory.html", '_blank');
+            }
+            td3.innerHTML = CRMOrder;
+            td3.style.cursor = "pointer";
+            td3.onclick = function(){
+                var crmordertid = CRMOrder;
+                localStorage.setItem("crmordertid",crmordertid);
+
+                window.open("crmorderview.html", '_blank');
+            }
+            td4.innerHTML = CRMOrderDate;
+            td5.innerHTML = Customer;
+            td6.innerHTML = Address
+            td7.innerHTML = ServiceType;
+            td7_1.innerHTML = OrderType;
+            //td7_1.innerHTML = CRMOrderDate;
+
+            const date1 = new Date(CRMOrderDate); 
+            const date2 = new Date(); 
+            const diffTime = date2.getTime() - date1.getTime(); 
+            const diffDays = Math.floor(Math.abs(diffTime / (1000 * 3600 * 24)));
+            td7_2.innerHTML = diffDays;
+
+            td8.innerHTML = Priority;
+            td9.innerHTML = AssignDate;
+            td10.innerHTML = AssignTime;
+            td11.innerHTML = assignedby_workgroup;
+            td12.innerHTML = assignedto_workgroup;
+            td13.innerHTML = Status;
+            td14.innerHTML = AssignComment;
+          
+            eventcount = event_ID;
+            if(td13.innerHTML == "RESOLVED") {
+                td15.append(delbtn);
+
+                //td16.style.display = "block";
+                clsbtn.style.display = "none";
+            }
+
+            clsbtn.onclick = function(){
+                
+                document.getElementById('assigntable').style.display = "block";
+                document.getElementById('lctable').style.display = "none";
+                thead.style.display = "none";
+                tbody.style.display = "none";
+                //thead2.style.display = "block";
+                //tbody2.style.display = "block";
+
+                
+                let trow= document.createElement("tr");
+
+                let td9_1 = document.createElement('td');
+				// let th10 = document.createElement('th');
+                let submitbtn = document.createElement('button');
+                submitbtn.innerText = "SUBMIT";
+
+
+                
+                let td6_1 = document.createElement('td');
+                td6_1.innerHTML = OrderType;
+                
+                let workopt1 = document.createElement('option');
+                let workopt2 = document.createElement('option');
+                let workopt3 = document.createElement('option');
+                let workopt4 = document.createElement('option');
+                let workopt5 = document.createElement('option');
+                let workopt6 = document.createElement('option');
+                let workopt7 = document.createElement('option');
+                
+
+                workopt1.innerHTML = "Bandwidth Upgraded";
+                workopt2.innerHTML = "Fiber laid up to customer premises";
+                workopt3.innerHTML = "TIP has completed fiber and ONU installation";
+                workopt4.innerHTML = "Media built-up done";
+                workopt5.innerHTML = "Configuration at PE router completed";
+                workopt6.innerHTML = "Configuration at BNG completed";
+                workopt7.innerHTML = "Shifting completed";
+
+                let td7select = document.createElement('select');
+                td7select.style.width ="100px";
+                let td7 = document.createElement('td');
+
+                //td6.innerHTML = '<select id="td6select" width = "80">';
+                td7.append(td7select);
+                
+                td7select.append(workopt1);
+                td7select.append(workopt2);
+                td7select.append(workopt3);
+                td7select.append(workopt4);
+                td7select.append(workopt5);
+                td7select.append(workopt6);
+                td7select.append(workopt7);
+                
+                let assignopt1 = document.createElement('option');
+                
+               
+
+                assignopt1.innerHTML = "LeasedLine";
+               
+                let td8 = document.createElement('td');
+                let td8select = document.createElement('select');
+                td8select.style.width="100px";
+                td8.append(td8select);
+                
+                td8select.append(assignopt1);
+               
+                let td8_1 = document.createElement('td');
+                let td8_1input = document.createElement('input');
+                td8_1.append(td8_1input);
+                td8_1.tabSize ="10px";
+                td8_1input.placeholder = "Enter comment";
+                td8_1input.style.tabSize ="10px"
+
+                td9_1.append(submitbtn);
+                //td9_1.style.marginTop = "40px";
+
+                td9_1.onclick= function(){
+                var date = new Date();
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                const localDate = year +"-"+ month +"-"+day ;
+                const time = date.toTimeString();
+                const localTime = time.split(' ')[0];
+                 eventcount++;
+               
+                
+                if(td8select.value =="LeasedLine-FinalSubmission"){
+                        statusflag = "PROVISIONED";
+                        finalcomment = "Order Provisioned";
+                        const date1 = new Date(OpenTime); 
+                        const date2 = new Date(); 
+                        const diffTime = date2.getTime() - date1.getTime(); 
+                        const diffDays = Math.floor(Math.abs(diffTime / (1000 * 3600 * 24)));
+
+              
+
+                }
+                    else{
+                        statusflag = "CLOSED";
+                        finalcomment = td8_1input.value;
+                    }
+             
+                    update(ref(db,"sectionlcprovisions/"+lcrole+"/"+CRMOrder+"/"),
+                {
+                    
+                    Status: statusflag,
+                    CloseDate: localDate,
+                    CloseTime: localTime,
+                    CloseComment: td8_1input.value,
+                    task_ID: lcrole
+                    //
+
+                    
+                }).then(()=>{
+                    const dbref = ref(db);
+                    get(child(dbref,"pendinglcprovisions/"+crmorder)).then((snapshot)=>{
+                        receivecount = snapshot.val().ReceiveCount;
+                        receivecount++;
+                    update(ref(db,"pendinglcprovisions/"+crmorder),{
+                        ReceiveCount: receivecount
+                    }).then(()=>{
+                        //alert("Order closed sucessfully !");
+                        location.reload();
+                    });
+                    });
+                 
+
+                   
+                }) 
+                .catch((error)=>{
+                 alert(error);
+            });
+
+            update(ref(db,"sectionlcprovisionshistory/"+lcrole+"/"+CRMOrder+"/"),
+                {
+                    
+                    Status: statusflag,
+                    CloseDate: localDate,
+                    CloseTime: localTime,
+                    CloseComment: td8_1input.value,
+                    task_ID: lcrole
+                    
+                }).then(()=>{
+                    alert("Order closed sucessfully !");
+                });
+
+
+          
+
+            
+
+                }
+
+
+                td1.innerHTML = LCID;
+                td2.innerHTML = CRMOrder;
+                td3.innerHTML = Customer;
+                td4.innerHTML = Address;
+                td5.innerHTML = ServiceType;
+                //td6.innerHTML = Address;
+                //td6.innerHTML = 
+
+                trow.appendChild(td1);
+                trow.appendChild(td2);
+                trow.appendChild(td3);
+                trow.appendChild(td4);
+                trow.appendChild(td5);
+                trow.appendChild(td6_1);
+                trow.appendChild(td7);
+                trow.appendChild(td8);
+                trow.appendChild(td8_1);
+                trow.appendChild(td9_1);
+
+                tbody2.appendChild(trow);
+
+            }
+            
+       
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+            trow.appendChild(td7);
+            trow.appendChild(td7_1);
+            trow.appendChild(td7_2);
+            trow.appendChild(td8);
+            trow.appendChild(td9);
+            trow.appendChild(td10);
+            trow.appendChild(td11);
+            trow.appendChild(td12);
+            trow.appendChild(td13);
+            trow.appendChild(td14);
+            trow.appendChild(td15);
+            //trow.appendChild(td16);
+
+            tbody.appendChild(trow);
+           // thead.appendChild(tbody);
+
+
+
+
+        }
+        function AddAllItemsToTable(lcprovlist){
+            slno = 0;
+            tbody.innerHTML = "";
+            lcprovlist.forEach(element => {
+                AddDataToTable(element.LCID,element.CRMOrder,element.Customer,element.ServiceType,element.Address,element.OrderType,element.CRMOrderDate,element.Priority,element.AssignDate,element.AssignTime,element.assignedby_workgroup,element.assignedto_workgroup,element.Status,element.AssignComment,element.event_ID);
+            });
+
+        }
+
+    
+        import { getDatabase, ref, child, onValue, get, set, update,remove} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        const db = getDatabase();
+
+       
+            function GetAllDataOnce(){
+            const dbref = ref(db);
+
+            if(currentuser)
+                {
+            if(userpriv == "SAU" || userpriv == "LLU"){
+                lcrole = "LeasedLine"
+                //lcprovlist.push(childSnapshot.val());
+                }
+            if(userpriv == "NIBU"){
+             
+                lcrole ="NIB";
+                
+                }
+
+                if(userpriv == "TXWU"){
+               
+                lcrole = "Tx-West"
+              
+                }
+                
+                if(userpriv == "CNTU"){
+                         lcrole = "CNTx-NER"
+             
+                }
+
+                if(userpriv == "TXNU"){
+               
+                lcrole = "Tx-North"
+                //lcprovlist.push(childSnapshot.val());
+                
+                }
+                if(userpriv == "TXSU"){
+               
+                lcrole = "Tx-South"
+                //lcprovlist.push(childSnapshot.val());
+                
+                }
+
+                     
+                }
+                    
+
+            get(child(dbref,"sectionlcprovisions/"+lcrole)).then((snapshot)=>{
+                var lcprovlist=[];
+                snapshot.forEach(childSnapshot => {
+                lcprovlist.push(childSnapshot.val());
+                    
+                
+                    
+                
+
+                });
+                AddAllItemsToTable(lcprovlist);
+                searchcount.innerText = slno;
+               
+            });
+            
+        } 
+        window.onload = GetAllDataOnce();
+       
+        var btn_export = document.getElementById('btn_export');
+        btn_export.style.marginLeft = "300px";
+        btn_export.style.cursor = "pointer";
+        btn_export.addEventListener('click',exportCSVExcel);
+
+        function exportCSVExcel() {
+            
+           
+        $('#lctable').table2excel({
+		exclude: ".no-export",
+		filename: "download.xls",
+		fileext: ".xls",
+		exclude_links: true,
+		exclude_inputs: true
+	});
+}
+
+      
+
+        
+
+
+    </script>
+</body>
+</html>

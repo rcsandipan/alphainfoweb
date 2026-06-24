@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assign Provision Orders</title>
+     
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+    <!-- <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- <script src="scrollingMessage.js"></script> -->
+    
+</head>
+<style>
+
+    
+.loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    /* a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+} */
+</style>
+
+<body>
+
+    <!-- Loader -->
+<!-- <div class="loader-container" id="loader"></div> -->
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar" style="top: 40px;">
+  <button class="close-btn" id="close-btn">&times;</button>
+  <ul class="menu">
+   <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+  </ul>
+</div>
+
+
+<!-- Main Content -->
+<div class="main-content">
+  <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+  <br><br>
+
+  <!-- Tables -->
+  <div>
+    <!-- Assign Provision Table 1 -->
+    <table id="assignprovtable1" class="table table-bordered">
+      <thead id="thead1">
+        <tr>
+          <th>LC ID</th>
+          <th>CRM ORDER NO</th>
+          <th>DATE</th>
+          <th>CUSTOMER NAME</th>
+          <th>ADDRESS</th>
+          <th>CIRCUIT TYPE</th>
+          <th>ORDER TYPE</th>
+          <th>PRIORITY</th>
+          <th>ASSIGNED TO</th>
+          <th>COMMENT</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="tbody1"></tbody>
+    </table>
+
+    <!-- Assign Provision Table 2 -->
+    <table id="assignprovtable2" class="table table-bordered">
+      <thead id="thead2">
+        <tr>
+          <th>LC ID</th>
+          <th>CRM ORDER NO</th>
+          <th>DATE</th>
+          <th>CUSTOMER NAME</th>
+          <th>ADDRESS</th>
+          <th>CIRCUIT TYPE</th>
+          <th>ORDER TYPE</th>
+          <th>PRIORITY</th>
+          <th>ASSIGNED TO</th>
+          <th>COMMENT</th>
+          <th>ACTION</th>
+        </tr>
+      </thead>
+      <tbody id="tbody2"></tbody>
+    </table>
+  </div>
+</div>
+   
+   
+    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="script.js"></script>
+    <script type="module">
+        import { app} from "./firebase-config.js";  
+        var slno = 0;
+        
+        var tbody = document.getElementById("tbody1");
+        var tbody2 = document.getElementById("tbody2");
+        var thead1 = document.getElementById("thead1");
+        var table1 = document.getElementById("assignprovtable1");
+        var table2 = document.getElementById("assignprovtable2");
+        table2.style.display = "none";
+        
+       
+     
+        
+        var prabaldocketid = localStorage.getItem("prabaldocketid");
+      
+        //console.log(prabaldocketid);
+            let trow= document.createElement("tr");
+            let td1_1input = document.createElement('input');
+            td1_1input.type = "Number";
+            td1_1input.style.width ="100px";
+            let td1_1 = document.createElement('td');
+            td1_1.append(td1_1input);
+
+            
+           
+            let td1input = document.createElement('input');
+            td1input.type = "Number";
+            td1input.style.width ="100px";
+            let td1 = document.createElement('td');
+            td1.append(td1input);
+
+            let td2input = document.createElement('input');
+            td2input.type = "Date";
+            td2input.style.width ="100px";
+            td2input.value = "2025-01-01"
+            let td2 = document.createElement('td');
+            td2.append(td2input);
+            let td3input = document.createElement('input');
+            td3input.type = Text;
+            let td3 = document.createElement('td');
+            td3.append(td3input);
+            let td4input = document.createElement('input');
+            td4input.type = Text;
+            let td4 = document.createElement('td');
+            td4.append(td4input);
+            let ckttypeopt1 = document.createElement('option');
+            let ckttypeopt2 = document.createElement('option');
+            let ckttypeopt3 = document.createElement('option');
+            ckttypeopt1.innerHTML ="ILL";
+            ckttypeopt2.innerHTML ="MPLS-VPN";
+            ckttypeopt3.innerHTML ="P2P";
+            let td5select = document.createElement('select');
+            td5select.append(ckttypeopt1);
+            td5select.append(ckttypeopt2);
+            td5select.append(ckttypeopt3);
+            
+            let td5 = document.createElement('td');
+            td5.append(td5select);
+
+            let ordertypeopt1 = document.createElement('option');
+            let ordertypeopt2 = document.createElement('option');
+            let ordertypeopt3 = document.createElement('option');
+            let ordertypeopt4 = document.createElement('option');
+            ordertypeopt1.innerHTML ="NEW";
+            ordertypeopt2.innerHTML ="SHIFTING";
+            ordertypeopt3.innerHTML ="CU-FIBER";
+            ordertypeopt4.innerHTML ="BANDWIDTH UPGRADATION";
+            let td6select = document.createElement('select');
+            td6select.style.width ="100px";
+            td6select.append(ordertypeopt1);
+            td6select.append(ordertypeopt2);
+            td6select.append(ordertypeopt3);
+            td6select.append(ordertypeopt4);
+            
+            let td6 = document.createElement('td');
+            td6.append(td6select);
+
+            let prioopt1 = document.createElement('option');
+            let prioopt2 = document.createElement('option');
+            prioopt1.innerHTML ="HIGH";
+            prioopt2.innerHTML ="NORMAL";
+            let td7select = document.createElement('select');
+            td7select.append(prioopt1);
+            td7select.append(prioopt2);
+            let td7 = document.createElement('td');
+            td7.append(td7select);
+
+            let assignopt1 = document.createElement('option');
+                let assignopt2 = document.createElement('option');
+                let assignopt3 = document.createElement('option');
+                let assignopt4 = document.createElement('option');
+                let assignopt5 = document.createElement('option');
+                let assignopt6 = document.createElement('option');
+                let assignopt7 = document.createElement('option');
+                let assignopt8 = document.createElement('option');
+                let assignopt9 = document.createElement('option');
+                let assignopt10 = document.createElement('option');
+                let assignopt11 = document.createElement('option');
+                let assignopt12 = document.createElement('option');
+                let assignopt13 = document.createElement('option');
+                let assignopt14 = document.createElement('option');
+                let assignopt15 = document.createElement('option');
+                let assignopt16 = document.createElement('option');
+                let assignopt17 = document.createElement('option');
+                let assignopt18 = document.createElement('option');
+                let assignopt19 = document.createElement('option');
+                let assignopt20 = document.createElement('option');
+                let assignopt21 = document.createElement('option');
+                let assignopt22 = document.createElement('option');
+                let assignopt23 = document.createElement('option');
+
+                assignopt1.innerHTML = "Tx-Installation";
+                assignopt2.innerHTML = "NIB";
+                assignopt3.innerHTML = "CNTx-NER";
+                assignopt4.innerHTML = "Tx-West";
+                assignopt5.innerHTML = "Tx-South";
+                assignopt6.innerHTML = "Tx-North";
+                assignopt7.innerHTML = "BBM-AGT";
+                assignopt8.innerHTML = "BBM-GB";
+                assignopt9.innerHTML = "BBM-Khowai";
+                assignopt10.innerHTML = "BBM-Dhalai";
+                assignopt11.innerHTML = "BBM-Unakoti";
+                assignopt12.innerHTML = "BBM-North";
+                assignopt13.innerHTML = "BBM-Bishalgarh";
+                assignopt14.innerHTML = "BBM-Sonamura";
+                assignopt15.innerHTML = "BBM-Gomati";
+                assignopt16.innerHTML = "BBM-South";
+                assignopt18.innerHTML = "CM-Maintenance";
+                assignopt19.innerHTML = "SDE-RKPur";
+                assignopt20.innerHTML = "SDE-GB";
+                assignopt21.innerHTML = "SDE-Dharmanagar";
+                assignopt22.innerHTML = "SDE-External";
+                assignopt23.innerHTML = "SDE-Bharatnet";
+                let td8select = document.createElement('select');
+                
+             
+                td8select.append(assignopt1);
+                td8select.append(assignopt2);
+                td8select.append(assignopt3);
+                td8select.append(assignopt4);
+                td8select.append(assignopt5);
+                td8select.append(assignopt6);
+                td8select.append(assignopt7);
+                td8select.append(assignopt8);
+                td8select.append(assignopt9);
+                td8select.append(assignopt10);
+                td8select.append(assignopt11);
+                td8select.append(assignopt12);
+                td8select.append(assignopt13);
+                td8select.append(assignopt14);
+                td8select.append(assignopt15);
+                td8select.append(assignopt16);
+                td8select.append(assignopt17);
+                td8select.append(assignopt18);
+                td8select.append(assignopt19);
+                td8select.append(assignopt20);
+                td8select.append(assignopt21);
+                td8select.append(assignopt22);
+                td8select.append(assignopt23);
+
+            let td8 = document.createElement('td');
+            td8.append(td8select);
+            let td9input = document.createElement('input');
+
+            let td9 = document.createElement('td');
+            td9.append(td9input);
+            let td10button = document.createElement('button');
+            td10button.innerHTML = "ASSIGN";
+            td10button.style.cursor = "pointer";
+            let td10 = document.createElement('td');
+            td10.append(td10button);
+            td10button.onclick = function(){
+ 
+              const date = new Date();
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const localDate = `${year}-${month}-${day}`;
+    const localTime = date.toTimeString().split(' ')[0];
+
+    const CRMOrder = td1input.value;
+    const sectionName = td8select.value;
+    const sectionRefPath = `workorders/${CRMOrder}/sections/${sectionName}`;
+
+    const workOrderData = {
+        title: `Provisioning for LC ${td1_1input.value}`,
+	CRMOrder:td1input.value,
+        
+	OrderDate: td2input.value,
+	LCID:td1_1input.value,
+	Customer:td3input.value,
+	Address:td4input.value,
+	ServiceType:td5select.value,
+	OrderType:td6select.value,
+	Priority: td7select.value,
+  assignedBy: "LeasedLine" // can be changed to dynamic admin UID if needed
+        
+    };
+
+    const sectionData = {
+        assignedTo: [],  // You can add a multi-select field to support multiple UIDs
+        AssignDate: localDate,
+	eventID:1,
+        Status: "OPEN",
+        InitialComment: td9input.value,
+        isAck: false,
+        isCompleted: false,
+	CloseComment:"",
+	CloseDate:"",
+	isVerified: false
+    };
+
+    const db = getDatabase();
+
+    // First, ensure the main workorder exists (can be merged using update too)
+    set(ref(db, "workorders/" + CRMOrder), workOrderData)
+    .then(() => {
+        return set(ref(db, sectionRefPath), sectionData);
+    })
+    .then(() => {
+        alert("Work Order and section assigned successfully!");
+        //window.location.reload();
+        window.location.href = "pendingprovision.html";
+    })
+    .catch((error) => {
+        console.error("Error assigning work:", error);
+        alert("Failed to assign work.");
+    });
+}
+
+
+
+
+            trow.appendChild(td1_1);
+            trow.appendChild(td1);
+            trow.appendChild(td2);
+            trow.appendChild(td3);
+            trow.appendChild(td4);
+            trow.appendChild(td5);
+            trow.appendChild(td6);
+            trow.appendChild(td7);
+            trow.appendChild(td8);
+            trow.appendChild(td9);
+            trow.appendChild(td10);
+        
+
+            tbody.appendChild(trow);
+
+
+
+
+
+
+       
+
+       
+        import { getDatabase, ref, child, onValue, get, set, update} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+        const db = getDatabase();
+
+      
+        
+
+        
+
+
+    </script>
+</body>
+</html>

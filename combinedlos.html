@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Combined LOS</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <!-- <link rel="stylesheet" href="homepage.css">
+    <link rel="stylesheet" href="tablestyle.css"> -->
+    <link rel="stylesheet" href="styles.css"> 
+
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+     <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    
+</head>
+<style>
+    a{
+    text-decoration: none;
+    color: white;
+    cursor: pointer;
+}
+   #provdetaildiv{
+    position: fixed;
+    top: 200px; /* Distance from the top */
+      right: 100px; /* Distance from the right */
+      background-color: #FFDEC8;
+      border: 1px solid black;
+      z-index: 1000; /* Ensure it's above other elements */
+      overflow: auto;
+   }
+   #provdetailtable td  {
+    border: 1px solid black;
+   }
+   #provdetailtable th  {
+    border: 1px solid black;
+   }
+      /* Add this CSS to position the open-btn */
+      .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+    
+</style>
+
+<body>
+
+
+<div class="main-content">
+    <button class="btn btn-success" id="home-btn"> HOME</button>
+    <h1 style="display:flex; text-align: center; margin-left: 30%;"> Loss of Signal (LOS) / Fibre Break</h1>
+
+<div >
+    <div style="margin:10px 0;">
+    <input type="text" id="searchInput" class="form-control"
+           placeholder="🔍 Search PON / ONU / MAC / Customer / FTTH..."
+           style="max-width:400px;">
+ </div>
+<div style="margin:10px 0; max-width:320px;">
+    <label><strong>Select OLT :</strong></label>
+    <select id="oltFilter" class="form-control">
+        <option value="All">All OLT</option>
+        <option value="Banerjee Para">Banerjee Para</option>
+        <option value="Dhaleswar">Dhaleswar</option>
+        <option value="GB">GB</option>
+        <option value="Kaman Chowmuhani">Kaman Chowmuhani</option>
+        <option value="Kunjaban">Kunjaban</option>
+        <option value="ONGC Colony">ONGC Colony</option>
+        <option value="Ushabazar">Ushabazar</option>
+    </select>
+</div>
+
+<button class="btn btn-primary" id="exportBtn" style="margin-left: 80%;">
+    Export to Excel
+</button>
+
+
+ </div>
+
+    <table class="table table-bordered" id="losdata-table" style="margin-top: 20px;">
+      <thead>
+        <tr>
+          <th>OLT</th>
+          <th>PON</th>
+          <th>ONU</th>
+          <th>FTTH No/IP Address</th>
+          <th>MAC</th>
+          <th>Customer</th>
+          <th>Address</th>
+          <th>Current Status</th>
+          <th>Last Synced</th>
+          <!-- <th>Rx Power(dBm)</th> -->
+          <th>Last Event</th>
+          <th>Event Time</th>
+
+        </tr>
+      </thead>
+      <tbody id="losdata-body">
+        <!-- Filled by JS -->
+      </tbody>
+    </table>
+
+</div>
+   
+    
+
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="script.js"></script>
+    <!-- <script type="module" src="auth-check.js"></script> -->
+    <script type="module">
+          function getWithExpiry(key) {
+    try {
+      const itemStr = localStorage.getItem(key);
+      if (!itemStr) return null;
+      
+      const item = JSON.parse(itemStr);
+      
+     
+      if (typeof item === 'string') {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      const now = new Date();
+      
+      if (now.getTime() > item.expiry) {
+        localStorage.removeItem(key);
+        return null;
+      }
+      
+      return item.value;
+    } catch (error) {
+      console.error('Error parsing localStorage data:', error);
+      localStorage.removeItem(key); // Clear corrupted data
+      return null;
+    }
+  }
+
+  const currentuser = getWithExpiry("currentuser");
+
+  if (!currentuser) {
+    window.location.href = "index.html";
+  } else {
+    // User is authenticated, continue with your page logic
+    console.log("User authenticated:", currentuser);
+  }
+
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+//import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+ import { app} from "./firebase-config.js";  
+
+//const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+//const auth = getAuth(app);
+//const firestore = getFirestore(app);
+
+//   const currentuser = localStorage.getItem("currentuser");
+//   const userRole = localStorage.getItem("userpriv");
+//   const userData = userDoc.data();
+//   const userRole = userData.role || 'user';
+//   const userSection = userData.section || '';
+//   var userSection = localStorage.getItem("userSection");
+//   console.log(userSection);
+//   console.log(userRole);
+
+
+
+const dataRef = ref(db, 'combinedlos');
+
+let allONUs = {};
+
+onValue(dataRef, (snapshot) => {
+    allONUs = snapshot.val() || {};
+    updateCounts();
+    renderTable();
+});
+
+/* ============================= */
+/* ===== UPDATE OLT COUNTS ===== */
+/* ============================= */
+function updateCounts() {
+
+    const counts = {};
+    let total = 0;
+
+    for (let key in allONUs) {
+        const olt = allONUs[key].olt || "Unknown";
+
+        counts[olt] = (counts[olt] || 0) + 1;
+        total++;
+    }
+
+    const select = document.getElementById("oltFilter");
+
+    for (let i = 0; i < select.options.length; i++) {
+
+        let value = select.options[i].value;
+
+        if (value === "All") {
+            select.options[i].text = `All OLT (${total})`;
+        } else {
+            let count = counts[value] || 0;
+            select.options[i].text = `${value} (${count})`;
+        }
+    }
+}
+
+/* ============================= */
+/* ===== RENDER TABLE ========= */
+/* ============================= */
+function renderTable() {
+
+    const tbody = document.getElementById("losdata-body");
+    const selectedOLT = document.getElementById("oltFilter").value;
+    const searchText = document.getElementById("searchInput").value.toLowerCase();
+
+    tbody.innerHTML = "";
+
+    let filteredData = [];
+
+    for (let key in allONUs) {
+
+        const onudata = allONUs[key];
+
+        /* OLT FILTER */
+        if (selectedOLT !== "All" && onudata.olt !== selectedOLT) continue;
+
+        /* SEARCH FILTER */
+        const rowText = Object.values(onudata).join(" ").toLowerCase();
+        if (!rowText.includes(searchText)) continue;
+
+        filteredData.push(onudata);
+    }
+
+    /* ============================= */
+    /* ===== SORT BY LOWEST RX ===== */
+    /* ============================= */
+    filteredData.sort((a, b) => {
+        let rxA = parseFloat(a.rxpower);
+        let rxB = parseFloat(b.rxpower);
+
+        if (isNaN(rxA)) rxA = 999;
+        if (isNaN(rxB)) rxB = 999;
+
+        return rxA - rxB; // lowest first
+    });
+
+    /* ============================= */
+    /* ===== CREATE ROWS ========== */
+    /* ============================= */
+    filteredData.forEach(onudata => {
+
+        let rx = parseFloat(onudata.rxpower);
+        let rxColor = (!isNaN(rx) && rx <= -26) ? "red" : "black";
+
+        let onuStatus = onudata.onustatus || "";
+        let onuColor = "black";
+
+        if (onuStatus === "ONLINE") onuColor = "green";
+        else if (onuStatus === "LOS/Fibre break") onuColor = "red";
+
+        const row = document.createElement("tr");
+
+        row.innerHTML = `
+            <td>${onudata.olt || ''}</td>
+            <td>${onudata.pon_no || ''}</td>
+            <td>${onudata.onu_id || ''}</td>
+            <td>${onudata.ftthno || ''}</td>
+            <td>${onudata.macaddress || ''}</td>
+            <td>${onudata.customer || ''}</td>
+            <td>${onudata.address || ''}</td>
+            <td>${onudata.currentstatus || ''}</td>
+            <td>${onudata.synctime || ''}</td>
+
+            
+
+            <td style="color:${onuColor}; font-weight:bold;">
+                ${onuStatus}
+            </td>
+
+            <td>${onudata.eventtime || ''}</td>
+        `;
+
+        tbody.appendChild(row);
+    });
+}
+
+/* ============================= */
+/* ===== SEARCH + FILTER ===== */
+/* ============================= */
+document.getElementById("searchInput").addEventListener("keyup", renderTable);
+document.getElementById("oltFilter").addEventListener("change", renderTable);
+
+/* ============================= */
+/* ===== EXPORT TO EXCEL ===== */
+/* ============================= */
+document.getElementById("exportBtn").addEventListener("click", function () {
+
+    $("#losdata-table").table2excel({
+        exclude: ".noExl",
+        name: "LOS Report",
+        filename: "LOS_Report",
+        fileext: ".xls"
+    });
+
+});
+
+/*=====HOME BUTTON=====*/
+document.getElementById("home-btn").addEventListener("click", function () {
+window.location.href = "alphahome.html";
+    
+});
+
+    </script>
+</body>
+</html>

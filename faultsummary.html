@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fault Summary</title>
+    <script type="module" src="scrollingMessage.js"></script>
+    <link rel="stylesheet" href="styles.css"> 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js"></script>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+</head>
+<style>
+     loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+   #msgdiv{
+    position: fixed;
+    top: 200px; /* Distance from the top */
+      right: 100px; /* Distance from the right */
+      background-color: white;
+      /* border: 1px solid black; */
+      z-index: 1000; /* Ensure it's above other elements */
+      overflow: auto;
+   }
+   /* #msgtable td  {
+    border: 1px solid black;
+   } */
+   /* #msgtable th  {
+    border: 1px solid black;
+   } */
+
+   .highlight { 
+    background-color: rgb(236, 109, 109) !important; 
+    color: white !important; 
+}
+
+</style>
+<body>
+    <div class="loader-container" id="loader"></div>
+    <div style="top: 40px;" class="sidebar" id="sidebar">
+        <button class="close-btn" id="close-btn">&times;</button>
+        <ul class="menu">
+          
+            <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+      <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+      <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+      <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+      <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+      <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+      <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+      <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+      <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+      <li id="report"><a href="report.html">Report</a></li>
+      <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+      <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+      <li id="logout"><a href = "logOut.html">LogOut</a></li>
+          
+        </ul>
+      </div>
+      <div class="main-content">
+        <button class="open-btn" id="open-btn">&#9776; Open Menu</button><br><br>
+        <div style="display: flex;justify-content: space-evenly;">
+            <!-- <div>Total Count: <b id="searchcount"></b> </div> -->
+            <div><button id="btn_export" class="btn btn-default" > EXPORT TO EXCEL</button> </div>
+        </div>
+        <br>
+        <div class="container" id="summarytablediv">
+            <table id= "summarytable"class="table table-bordered">
+                <thead id="thead1">
+                    <th style="text-align: center; "> SL</th>
+                     <th style="text-align: center;">SECTION</th>
+                    <th style="text-align: center;">FAULT COUNT</th>
+                    
+                    
+                                 
+                </thead>
+               
+                <tbody id="tbody1"></tbody>
+                <!-- <tbody id="tbody2"></tbody> -->
+                 
+                
+            </table>
+            </div>
+
+           
+      </div>
+
+     
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+    <script src="script.js"></script>
+    <script type="module" src="auth-check.js"></script>
+    <script  type="module">
+        const loaderContainer = document.getElementById("loader");
+        const spinner = new Spinner({ color: "#3498db", lines: 12 }).spin(loaderContainer);
+
+    setInterval(() => {
+        location.reload();
+    }, 180000);
+
+      import { app} from "./firebase-config.js";  
+
+var slno = 0;
+var lcrole;
+var summarytable = document.getElementById("summarytable");
+var summarytablediv = document.getElementById("summarytablediv");
+var tbody1 = document.getElementById("tbody1");
+
+var thead1 = document.getElementById("thead1");
+var searchcount = document.getElementById('searchcount')
+
+
+
+let lcfilter = document.getElementById("input1");
+let lcid,customer,address,servicetype;
+const currentuser = localStorage.getItem("currentuser");
+const userpriv = localStorage.getItem("userpriv");
+summarytablediv.style.width = "700px";
+
+            
+if(currentuser){
+
+    if(userpriv == "LLU" || userpriv == "SAU")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('assignprov').style.display = "block";
+                document.getElementById('pendingprov').style.display = "block";
+            }
+
+  if(userpriv == "GM"){
+  
+  }
+  if(userpriv == "LLA")
+            {
+                document.getElementById('prabalplus').style.display = "block";
+                document.getElementById('myprov').style.display = "none";
+                
+            }
+}
+
+
+
+function AddDataToTable(workgroup,count){
+    
+    let trow= document.createElement("tr");
+    let td1 = document.createElement('td');
+    let td2 = document.createElement('td');
+    let td3 = document.createElement('td');
+    td1.style.width = "10px";
+    td2.style.width = "50px";
+    td3.style.width = "10px";
+    td1.innerHTML = ++slno;
+    td2.innerHTML = workgroup;
+   
+
+    // td2.style.cursor = "pointer";
+    //         td2.onclick = function(){
+    //             FilterbySection(td2.innerText);
+    //         }
+            
+
+    td3.innerHTML = count;
+   
+
+
+    trow.appendChild(td1);
+    trow.appendChild(td2);
+    trow.appendChild(td3);
+    
+   
+    tbody1.appendChild(trow);
+
+
+
+
+
+
+}
+function AddAllItemsToTable(summarylist){
+    slno = 0;
+    tbody1.innerHTML = "";
+    summarylist.forEach(element => {
+        AddDataToTable(element.workgroup,element.count);
+    });
+
+}
+
+
+import { getDatabase, ref, child, onValue, get, set,update} from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+const db = getDatabase();
+
+
+    function GetAllDataOnce(){
+    const dbref = ref(db);
+    let workgroupCountsArray = [
+    { workgroup: "LeasedLine", count: 0 },
+    { workgroup: "FinalSubmission", count: 0 },
+    { workgroup: "NIB", count: 0 },
+    { workgroup: "Tx-West", count: 0 },
+    { workgroup: "Tx-North", count: 0 },
+    { workgroup: "CNTx-NER", count: 0 },
+    { workgroup: "BBM-AGT", count: 0 },
+    { workgroup: "BBM-GB", count: 0 },
+    { workgroup: "BBM-Sonamura", count: 0 },
+    { workgroup: "BBM-Bishalgarh", count: 0 },
+    { workgroup: "BBM-Gomati", count: 0 },
+    { workgroup: "BBM-South", count: 0 },
+    { workgroup: "BBM-Khowai", count: 0 },
+    { workgroup: "BBM-Dhalai", count: 0 },
+    { workgroup: "BBM-Unakoti", count: 0 },
+    { workgroup: "BBM-North", count: 0 },
+    { workgroup: "Tx-South", count: 0 },
+    {workgroup: "CM-Maintenance", count: 0 },
+    {workgroup: "SDE-RKPur", count: 0 },
+    {workgroup: "SDE-GB", count: 0 },
+    {workgroup: "SDE-Dharmanagar", count: 0 },
+    {workgroup: "SDE-External", count: 0 },
+    {workgroup: "SDE-Bharatnet", count: 0 },
+    ];
+    
+    get(child(dbref,"lcfaultrecords")).then((snapshot)=>{
+        snapshot.forEach(childSnapshot => {
+    
+        const fault = childSnapshot.val();
+       
+            
+        const section = fault.assignedto_workgroup;
+        //console.log(snapshot.val());
+        const workgroupObj = workgroupCountsArray.find((item) => item.workgroup === section);
+        if (workgroupObj) {
+            workgroupObj.count++;
+        }
+
+        workgroupCountsArray.sort((b1, b2) => 
+            (parseInt(b1.count) < parseInt(b2.count)) ? 1 : (parseInt(b1.count) > parseInt(b2.count)) ? -1 : 0);
+        
+
+        AddAllItemsToTable(workgroupCountsArray);
+        //searchcount.innerText = slno;
+        spinner.stop();
+        loaderContainer.style.display = "none";
+    });
+       
+    });
+
+    
+}       
+window.onload = GetAllDataOnce();
+
+
+
+var btn_export = document.getElementById('btn_export');
+searchcount.style.marginLeft = "5px";
+searchcount.style.marginTop = "10px";
+btn_export.style.marginLeft = "700px";
+btn_export.style.marginRight = "100px";
+btn_export.style.marginTop = "10px";
+
+btn_export.addEventListener('click',exportCSVExcel);
+
+function exportCSVExcel() {
+    
+   
+$('#summarytable').table2excel({
+exclude: ".no-export",
+filename: "download.xls",
+fileext: ".xls",
+exclude_links: true,
+exclude_inputs: true
+});
+} 
+
+function FilterbySection(section) 
+{
+    
+    const dbref = ref(db);
+
+    get(child(dbref,"lcfaultrecords")).then((snapshot)=>{
+        var report=[];
+        snapshot.forEach(childSnapshot => {
+            const start = new Date(childSnapshot.val().OpenTime);
+            const end = new Date();
+
+    // Calculate the difference in milliseconds
+    const diffMs = end - start;
+
+            var durationobj = {
+                    
+                    "PrabalDocketID": childSnapshot.val().PrabalDocketID,
+                   "OpenTime":childSnapshot.val().OpenTime,
+                    "Customer": childSnapshot.val().Customer,
+                    "assignedto_workgroup":childSnapshot.val().assignedto_workgroup,
+                              
+                    "duration": diffMs};
+
+                 if( durationobj.assignedto_workgroup == section){
+            report.push( durationobj);
+           
+                  }
+                  report.sort((b1, b2) => 
+            (parseInt(b1.duration) < parseInt(b2.duration)) ? 1 : (parseInt(b1.duration) > parseInt(b2.duration)) ? -1 : 0);
+        
+      
+
+
+
+        });
+
+
+
+
+
+        AddAllItemsToTable(report);
+        searchcount.innerText = slno;
+        
+    });
+        //location.reload();
+       
+       
+   
+
+}
+
+
+
+
+    </script>
+</body>
+</html>

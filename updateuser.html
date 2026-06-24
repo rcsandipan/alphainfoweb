@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Update User Role</title>
+  <script type="module" src="scrollingMessage.js"></script>
+  <link rel="stylesheet" href="styles.css"/>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"/>
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<style>
+  .form-group {
+    margin: 15px 0;
+  }
+  .narrow-input {
+  max-width: 400px; /* Adjust as needed */
+}
+.swal2-popup {
+    width: 600px !important; /* Set the width */
+    font-size: 16px !important; /* Increase font size */
+}
+.highlight { 
+       background-color: #b35e88 !important; 
+       color: white !important; 
+   }
+.priority-normal {
+  background-color: #28a745;
+  color: white;
+}
+
+.priority-high {
+  background-color: #fd7e14;
+  color: white;
+}
+
+.priority-very-high {
+  background-color: #dc3545;
+  color: white;
+}
+
+.priority-critical {
+  background-color: #8B0000;
+  color: white;
+}
+.leasedline{
+    background-color: #358b32;
+  color: white;
+}
+
+    .main-content {
+      position: relative; /* Required for absolute positioning of child elements */
+      top: 25px;
+    }
+
+
+    .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+.tabs {
+    max-width: 1500px;
+    margin: 20px auto;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.tab-buttons {
+    display: flex;
+    background-color: #f1f1f1;
+}
+
+.tab-button {
+    /* flex: 1; */
+    width: 200px;
+    padding: 10px 0px;
+    border: none;
+    /* border: 0.25px solid #000; */
+    background-color: inherit;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tab-button:hover {
+    background-color: #ddd;
+}
+
+.tab-button.active {
+    background-color: #ccc;
+}
+
+.tab-content {
+    padding: 20px;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+
+</style>
+
+
+
+
+<body>
+  <!-- Sidebar -->
+  <div style="top: 40px;" class="sidebar" id="sidebar">
+    <button style="top: 10px;" class="close-btn" id="close-btn">&times;</button>
+    <ul class="menu">
+       <li id="homepage" ><a href="lccarehome.html">Home</a></li>
+       <li id="updateuser" style="display: none;"><a href = "updateuser.html">Manage User</a></li>
+            <li id="leasedline"><a href="lclist.html">LeasedLine</a></li>
+            <li id="prabalplus" style="display: none;"><a href="prabalplus.html">Dockets</a></li>
+            <li id="scrollingmsg" style="display: none;"><a href="scrollmsg.html">Set Scrolling Message</a></li>
+            <li id="pendingfaults" ><a href="lcfault.html">Pending Faults</a></li>
+            <li id="gmmsg" ><a href="gmmsg.html">Message from GM</a></li>
+            <li id="assignprov" style="display: none;"><a href="assignProv.html">Assign Provision Order</a></li>
+            <li id="pendingprov"><a href="pendingprovision.html">Pending Provision Order</a></li>
+            <li id="closedprovorder"><a href="closedworkorder.html">Closed Provision Order</a></li>
+            <li id="report"><a href="report.html">Report</a></li>
+            <li id="p2pcalculator"><a href = "p2pcalculator.html">P2P Rate Calculator</a></li>
+            <li id="changepassword"><a href = "changepassword.html">Change Password</a></li>
+            <li id="logout"><a href = "logOut.html">LogOut</a></li>
+    </ul>
+  </div>
+  <div class="main-content">
+    <button class="open-btn" id="open-btn">&#9776; Open Menu</button>
+
+    <div class="tabs">
+            <!-- Tab Buttons -->
+            <div class="tab-buttons">
+                <button class="tab-button active" data-tab="tab1">CREATE USER</button>
+                <button class="tab-button" data-tab="tab2">UPDATE USER</button>
+                
+            </div>
+    
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <div id="tab1" class="tab-pane active">
+                    
+                   
+                    <div class="container">
+                        <h2 class="mb-4">Create New User</h2>
+    <div id="createinfo">
+         <div class="mb-3">
+      <label>Email:</label>
+      <input type="email" id="email" class="form-control narrow-input" placeholder="Enter email">
+    </div>
+
+    <div class="mb-3">
+      <label>Password:</label>
+      <input type="password" id="password" class="form-control narrow-input" placeholder="Enter password">
+    </div>
+
+    <div class="mb-3">
+      <label>Per Number:</label>
+      <input type="text" id="perNo" class="form-control narrow-input" placeholder="Enter Per Number">
+    </div>
+
+    <div class="mb-3">
+      <label>LC Role:</label>
+      <input type="text" id="lcRole" class="form-control narrow-input" placeholder="Enter LCRole">
+    </div>
+
+    <div class="mb-3">
+      <label>Privilege:</label>
+      <input type="text" id="priv" class="form-control narrow-input" placeholder="Enter privilege">
+    </div>
+    </div>
+    
+ 
+
+    <br>
+    <button id="createBtn" class="btn btn-primary">Create User</button>
+    <button class="btn btn-default" onclick="resetcreateForm()">RESET</button>
+    
+
+
+
+                    </div>
+    
+                </div>
+                <div id="tab2" class="tab-pane">
+                                     
+                   
+                    
+                    <div class="container">
+<h3>Update User Privilege & Role</h3>
+
+    <div class="form-group narrow-input">
+      <label for="perNo">Enter PerNo:</label>
+      <input type="text" id="update_perNo" class="form-control" placeholder="Enter PerNo">
+      <br>
+      <button class="btn btn-primary" onclick="fetchUser()">Fetch</button>
+    </div>
+
+    <div id="userInfo" style="display:none;">
+      <div class="form-group narrow-input">
+        <label for="empName">Name:</label>
+        <input type="text" id="empName" class="form-control" readonly>
+      </div>
+
+      <div class="form-group narrow-input">
+        <label for="priv">Priv:</label>
+        <input type="text" id="update_priv" class="form-control">
+      </div>
+
+      <div class="form-group narrow-input">
+        <label for="lcRole">LCRole:</label>
+        <input type="text" id="update_lcRole" class="form-control">
+      </div>
+
+      <button class="btn btn-success" onclick="updateUser()">UPDATE</button>
+      <button class="btn btn-default" onclick="resetForm()">RESET</button>
+    </div>
+  </div>
+
+                       
+                    </div>
+    
+    
+    
+                </div>
+
+
+  </div>
+
+    </div>
+  
+  <script src="script.js"></script>
+  <script type="module">
+
+    document.addEventListener('DOMContentLoaded', function () {
+    const tabButtons = document.querySelectorAll('.tab-button');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function () {
+            // Remove 'active' class from all buttons and panes
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+
+            // Add 'active' class to the clicked button and corresponding pane
+            this.classList.add('active');
+            const targetTab = this.getAttribute('data-tab');
+            document.getElementById(targetTab).classList.add('active');
+        });
+    });
+});
+
+   import { app } from './firebase-config.js';
+   import {
+  getFirestore,
+  collection,
+  getDocs,
+  setDoc,
+  query,
+  where,
+  updateDoc,
+  doc
+} from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-firestore.js';
+
+    import {
+      getDatabase,
+      ref,
+      child,
+      get
+
+    } from 'https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js';
+
+    import { 
+      getAuth, 
+      createUserWithEmailAndPassword 
+    } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+
+    const dbRealtime = getDatabase();
+    const dbFirestore = getFirestore();
+    const auth = getAuth();
+    const db = getFirestore();
+    let userDocId = null;
+
+    // ....................code for tab1............//
+
+        document.getElementById("createBtn").addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const perNo = document.getElementById("perNo").value.trim();
+      const lcRole = document.getElementById("lcRole").value.trim();
+      const priv = document.getElementById("priv").value.trim();
+
+      if (!email || !password || !perNo || !lcRole || !priv) {
+        alert("Please fill all fields");
+        return;
+      }
+
+      try {
+        // Create Firebase Auth user
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        const uid = userCredential.user.uid;
+
+        // Save additional data in Firestore
+        await setDoc(doc(db, "users", uid), {
+          EMail: email,
+          PerNo: perNo,
+          LCRole: lcRole,
+          Priv: priv
+        });
+
+        alert("User created successfully with UID: " + uid);
+        document.getElementById("perNo").value = "";
+          document.getElementById("email").value = "";
+          document.getElementById("password").value = "";
+          document.getElementById("lcRole").value = "";
+          document.getElementById("priv").value = "";
+
+      } catch (error) {
+        console.error("Error creating user:", error);
+        alert(error.message);
+      }
+    });
+
+    window.resetcreateForm = function () {
+  document.getElementById("perNo").value = "";
+  document.getElementById("email").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("lcRole").value = "";
+  document.getElementById("priv").value = "";
+ 
+}
+
+    //..............................end of tab1..............................//
+
+    window.fetchUser = async function () {
+  const perNo = document.getElementById("update_perNo").value.trim();
+  if (!perNo) {
+    Swal.fire("Error", "Please enter a valid PerNo", "error");
+    return;
+  }
+
+  try {
+    // Fetch name from Realtime DB
+    const empSnap = await get(child(ref(dbRealtime), "bsnltrpstafflist/" + perNo));
+    if (!empSnap.exists()) {
+      Swal.fire("Not Found", "No user found in staff database for PerNo: " + perNo, "warning");
+      return;
+    }
+
+    const empName = empSnap.val().empName || "-";
+    document.getElementById("empName").value = empName;
+
+    // Search Firestore for document where PerNo matches
+    const q = query(collection(dbFirestore, "users"), where("PerNo", "==", perNo));
+    const snapshot = await getDocs(q);
+
+    if (snapshot.empty) {
+      Swal.fire("Not Found", "No user found in user database for PerNo: " + perNo, "warning");
+      return;
+    }
+
+    const docData = snapshot.docs[0];
+    userDocId = docData.id; // Save the document ID for updating
+
+    const data = docData.data();
+    document.getElementById("update_priv").value = data.Priv || "";
+    document.getElementById("update_lcRole").value = data.LCRole || "";
+
+    document.getElementById("userInfo").style.display = "block";
+
+  } catch (err) {
+    console.error("Fetch Error:", err);
+    Swal.fire("Error", "An error occurred while fetching data", "error");
+  }
+}
+
+
+    window.updateUser = async function () {
+  if (!userDocId) {
+    Swal.fire("Error", "Please fetch a user first", "error");
+    return;
+  }
+
+  const priv = document.getElementById("update_priv").value.trim();
+  const lcRole = document.getElementById("update_lcRole").value.trim();
+
+  if (!priv || !lcRole) {
+    Swal.fire("Incomplete", "Priv and LCRole cannot be empty", "warning");
+    return;
+  }
+
+  try {
+    const userRef = doc(dbFirestore, "users", userDocId);
+    await updateDoc(userRef, {
+      Priv: priv,
+      LCRole: lcRole
+    });
+
+    Swal.fire("Success", "User updated successfully", "success");
+
+  } catch (err) {
+    console.error("Update Error:", err);
+    Swal.fire("Error", "Failed to update user", "error");
+  }
+}
+window.resetForm = function () {
+  document.getElementById("update_perNo").value = "";
+  document.getElementById("empName").value = "";
+  document.getElementById("update_priv").value = "";
+  document.getElementById("update_lcRole").value = "";
+  document.getElementById("userInfo").style.display = "none";
+}
+
+  </script>
+</body>
+</html>
+
