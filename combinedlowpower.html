@@ -117,47 +117,47 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
-    <script src="script.js"></script>
+    <!-- <script src="script.js"></script> -->
     <!-- <script type="module" src="auth-check.js"></script> -->
     <script type="module">
 
 
-      function getWithExpiry(key) {
-    try {
-      const itemStr = localStorage.getItem(key);
-      if (!itemStr) return null;
+//       function getWithExpiry(key) {
+//     try {
+//       const itemStr = localStorage.getItem(key);
+//       if (!itemStr) return null;
       
-      const item = JSON.parse(itemStr);
+//       const item = JSON.parse(itemStr);
       
      
-      if (typeof item === 'string') {
-        localStorage.removeItem(key);
-        return null;
-      }
+//       if (typeof item === 'string') {
+//         localStorage.removeItem(key);
+//         return null;
+//       }
       
-      const now = new Date();
+//       const now = new Date();
       
-      if (now.getTime() > item.expiry) {
-        localStorage.removeItem(key);
-        return null;
-      }
+//       if (now.getTime() > item.expiry) {
+//         localStorage.removeItem(key);
+//         return null;
+//       }
       
-      return item.value;
-    } catch (error) {
-      console.error('Error parsing localStorage data:', error);
-      localStorage.removeItem(key); // Clear corrupted data
-      return null;
-    }
-  }
+//       return item.value;
+//     } catch (error) {
+//       console.error('Error parsing localStorage data:', error);
+//       localStorage.removeItem(key); // Clear corrupted data
+//       return null;
+//     }
+//   }
 
-  const currentuser = getWithExpiry("currentuser");
+//   const currentuser = getWithExpiry("currentuser");
 
-  if (!currentuser) {
-    window.location.href = "index.html";
-  } else {
-    // User is authenticated, continue with your page logic
-    console.log("User authenticated:", currentuser);
-  }
+//   if (!currentuser) {
+//     window.location.href = "index.html";
+//   } else {
+//     // User is authenticated, continue with your page logic
+//     console.log("User authenticated:", currentuser);
+//   }
 
         
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";

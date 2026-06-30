@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kaman Chowmuhani OLT</title>
+    <title>Ushabazar OLT</title>
     <script type="module" src="scrollingMessage.js"></script>
     
     <link rel="stylesheet" href="styles.css"> 
@@ -50,7 +50,7 @@
 
 <div class="main-content">
     <button class="btn btn-success" id="home-btn"> HOME</button>
-    <h1 style="display:flex; text-align: center; margin-left: 40%;"> Kaman Chowmuhani OLT</h1>
+    <h1 style="display:flex; text-align: center; margin-left: 40%;"> Ushabazar OLT</h1>
 <div>Total Count: <b id="searchcount"></b> </div>
 <div style="display: inline-flex; justify-content: space-evenly;" >
     
@@ -123,7 +123,7 @@ import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/
 const db = getDatabase(app);
 
 let onulevel = -26;
-const dataRef = ref(db, 'kcwoltdata');
+const dataRef = ref(db, 'aptoltdata');
 
 let allONUs = {};
 
@@ -381,8 +381,8 @@ document.getElementById("exportBtn").addEventListener("click", function () {
 
     $("#onudata-table").table2excel({
         exclude: ".noExl",
-        name: "KCW OLT Report",
-        filename: "KCWOLT_Report",
+        name: "Ushabazar OLT Report",
+        filename: "UshabazarOLT_Report",
         fileext: ".xls"
     });
 

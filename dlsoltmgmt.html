@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dhaleswar OLT</title>
-    <!-- <script type="module" src="scrollingMessage.js"></script> -->
-    <!-- <link rel="stylesheet" href="homepage.css">
-    <link rel="stylesheet" href="tablestyle.css"> -->
+    <script type="module" src="scrollingMessage.js"></script>
+    
     <link rel="stylesheet" href="styles.css"> 
 
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+     <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
 </head>
 <style>
@@ -46,22 +46,43 @@
 </style>
 
 <body>
-<div>
-       
-</div>
+
 
 <div class="main-content">
     <button class="btn btn-success" id="home-btn"> HOME</button>
     <h1 style="display:flex; text-align: center; margin-left: 40%;"> Dhaleswar OLT</h1>
-    <div style="margin:10px 0;">
+<div>Total Count: <b id="searchcount"></b> </div>
+<div style="display: inline-flex; justify-content: space-evenly;" >
+    
+    <div  style="margin-right: 700px; width: 400px;" >
     <input type="text" id="searchInput" class="form-control"
-           placeholder="🔍 Search PON / ONU / MAC / Customer / FTTH..."
-           style="max-width:400px;">
+           placeholder="🔍 Search MAC / Customer / FTTH..." width="500px"
+
+           >
+   </div>
+    <div style="width: 220px;">
+        <input type="text" id="ponSearchInput" class="form-control"
+               placeholder="Search PON No (e.g. 1 or 0/1)">
+    </div>
+
+    <div style="width: 220px;" id="onuSearchWrap" hidden>
+        <input type="text" id="onuSearchInput" class="form-control"
+               placeholder="Search ONU ID">
+    </div>
+
+<div>
+    <button class="btn btn-primary" id="exportBtn" >
+    Export to Excel
+</button>
 </div>
-    <table class="table table-bordered" id="onudata-table">
+
+
+ </div>
+
+    <table class="table table-bordered" id="onudata-table" style="margin-top: 20px;">
       <thead>
         <tr>
-          
+        
           <th>PON</th>
           <th>ONU</th>
           <th>FTTH No/IP Address</th>
@@ -89,143 +110,159 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
     <script src="https://cdn.rawgit.com/rainabba/jquery-table2excel/1.1.0/dist/jquery.table2excel.min.js"></script>
-    <script src="script.js"></script>
-    <!-- <script type="module" src="auth-check.js"></script> -->
+    <!-- <script src="script.js"></script>
+    <script type="module" src="auth-check.js"></script> -->
     <script type="module">
-
-           function getWithExpiry(key) {
-    try {
-      const itemStr = localStorage.getItem(key);
-      if (!itemStr) return null;
-      
-      const item = JSON.parse(itemStr);
-      
-     
-      if (typeof item === 'string') {
-        localStorage.removeItem(key);
-        return null;
-      }
-      
-      const now = new Date();
-      
-      if (now.getTime() > item.expiry) {
-        localStorage.removeItem(key);
-        return null;
-      }
-      
-      return item.value;
-    } catch (error) {
-      console.error('Error parsing localStorage data:', error);
-      localStorage.removeItem(key); // Clear corrupted data
-      return null;
-    }
-  }
-
-  const currentuser = getWithExpiry("currentuser");
-
-  if (!currentuser) {
-    window.location.href = "index.html";
-  } else {
-    // User is authenticated, continue with your page logic
-    console.log("User authenticated:", currentuser);
-  }
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
-import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
+import { getDatabase, ref, onValue, update, set } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
 //import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
  import { app} from "./firebase-config.js";  
 
 //const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-  const dataRef = ref(db, 'dlsoltdata');
+let onulevel = -26;
+const dataRef = ref(db, 'dlsoltdata');
 
-  //let orders = [];
-   let filteredData = [];
-  onValue(dataRef, (snapshot) => {
-    filteredData = [];
-    const orders = snapshot.val();
+let allONUs = {};
 
-    //orders.push(snapshot.val());
+onValue(dataRef, (snapshot) => {
+    allONUs = snapshot.val() || {};
+ 
+    renderTable();
+});
+
+
+/* ============================= */
+/* ===== RENDER TABLE ========= */
+/* ============================= */
+
+function normalizePon(value) {
+    const str = String(value ?? "").trim();
+
+    if (str.includes("/")) {
+        const parts = str.split("/");
+        const pon = parseInt(parts[1], 10);   // "0/1" -> 1
+        return isNaN(pon) ? 999 : pon;
+    }
+
+    const pon = parseInt(str, 10);            // "1" -> 1
+    return isNaN(pon) ? 999 : pon;
+}
+
+function renderTable() {
     const tbody = document.getElementById("onudata-body");
+    const searchcount = document.getElementById("searchcount");
+
+    const searchText = document.getElementById("searchInput").value.toLowerCase().trim();
+    const ponInput = document.getElementById("ponSearchInput").value.trim();
+    const onuInput = document.getElementById("onuSearchInput").value.trim();
+    const onuSearchWrap = document.getElementById("onuSearchWrap");
+
     tbody.innerHTML = "";
+    let filteredData = [];
 
-    
-    for (let key in orders) {
-      const order = orders[key];
-      filteredData.push(order);
+    const normalizedPonInput = ponInput ? normalizePon(ponInput) : null;
 
-   /* ---------- RX POWER COLOR ---------- */
-  let rx = parseFloat(order.rxpower);
-  let rxColor = (!isNaN(rx) && rx <= -26) ? "red" : "black";
+    for (let key in allONUs) {
+        const onudata = allONUs[key];
 
-  /* ---------- ONU STATUS COLOR ---------- */
-  let onuStatus = order.onustatus || "";
-  let onuColor = "black";
+        let rx = parseFloat(onudata.rxpower);
+        if (isNaN(rx)) continue;
 
-  if (onuStatus === "ONLINE") {
-      onuColor = "green";
-  } 
-  else if (onuStatus === "LOS/Fibre break") {
-      onuColor = "red";
-  }
+        if (searchText) {
+            const rowText = Object.values(onudata).join(" ").toLowerCase();
+            if (!rowText.includes(searchText)) continue;
+        }
 
-     filteredData.sort((a, b) => {
-        let rxA = parseInt(a.onu_id);
-        let rxB = parseInt(b.onu_id);
+        if (ponInput) {
+            const rowPon = normalizePon(onudata.pon_no);
+            if (rowPon !== normalizedPonInput) continue;
+        }
 
-        if (isNaN(rxA)) rxA = 999;
-        if (isNaN(rxB)) rxB = 999;
+        filteredData.push(onudata);
+    }
 
-        return rxA - rxB; // lowest first
+    if (ponInput && filteredData.length > 0) {
+        onuSearchWrap.hidden = false;
+    } else {
+        onuSearchWrap.hidden = true;
+        document.getElementById("onuSearchInput").value = "";
+    }
+
+    if (!onuSearchWrap.hidden && onuInput) {
+        filteredData = filteredData.filter(onudata => {
+            return String(onudata.onu_id ?? "").trim() === onuInput;
+        });
+    }
+
+    filteredData.sort((a, b) => {
+        const ponA = normalizePon(a.pon_no);
+        const ponB = normalizePon(b.pon_no);
+
+        if (ponA !== ponB) {
+            return ponA - ponB;
+        }
+
+        let onuA = parseInt(a.onu_id, 10);
+        let onuB = parseInt(b.onu_id, 10);
+
+        if (isNaN(onuA)) onuA = 999;
+        if (isNaN(onuB)) onuB = 999;
+
+        return onuA - onuB;
     });
 
-      
+    filteredData.forEach(onudata => {
+        let rx = parseFloat(onudata.rxpower);
+        let rxColor = (!isNaN(rx) && rx <= onulevel) ? "red" : "black";
+
+        let onuStatus = onudata.onustatus || "";
+        let onuColor = "black";
+
+        if (onuStatus === "ONLINE") onuColor = "green";
+        else if (onuStatus === "LOS/Fibre break") onuColor = "red";
+
         const row = document.createElement("tr");
+
         row.innerHTML = `
-          <td>${order.pon_no || ''}       
-            
+            <td>${onudata.pon_no || ''}</td>
+            <td>${onudata.onu_id || ''}</td>
+            <td>${onudata.ftthno || ''}</td>
+            <td>${onudata.macaddress || ''}</td>
+            <td>${onudata.customer || ''}</td>
+            <td>${onudata.address || ''}</td>
+            <td>${onudata.currentstatus || ''}</td>
+            <td>${onudata.synctime || ''}</td>
+            <td style="color:${rxColor}; font-weight:bold;">
+                ${onudata.rxpower || ''}
             </td>
-
-          <td>${order.onu_id || ''}</td>
-          <td>${order.ftthno || ''}</td>
-          <td>${order.macaddress || ''}</td>
-          <td>${order.customer || ''}</td>
-          <td>${order.address || ''}</td>
-          <td>${order.currentstatus || ''}</td>
-          <td>${order.synctime || ''}</td>
-
-
-           <!-- RX POWER -->
-      <td style="color:${rxColor}; font-weight:bold;">
-          ${order.rxpower || ''}
-      </td>
-
-      <!-- ONU STATUS -->
-      <td style="color:${onuColor}; font-weight:bold;">
-          ${onuStatus}
-      </td>
-         
-          <td>${order.eventtime || ''}</td>
-          <td style="width:130px;">
-           <button class="btn btn-info btn-xs edit-btn">Edit</button>
-            <button class="btn btn-danger btn-xs delete-btn">Delete</button>
-        </td>
+            <td style="color:${onuColor}; font-weight:bold;">
+                ${onuStatus}
+            </td>
+            <td>${onudata.eventtime || ''}</td>
+            <td style="width:130px;">
+                <button class="btn btn-info btn-xs edit-btn">Edit</button>
+                <button class="btn btn-danger btn-xs delete-btn">Delete</button>
+            </td>
         `;
 
-        row.querySelector(".edit-btn").addEventListener("click", () => editPon(order));
-      row.querySelector(".delete-btn").addEventListener("click", () => deletePon(order.key));
+        row.querySelector(".edit-btn").addEventListener("click", () => editPon(onudata));
+        row.querySelector(".delete-btn").addEventListener("click", () => deletePon(onudata.key));
+
         tbody.appendChild(row);
-         
-    
+    });
 
-    }
-  });
+    searchcount.innerText = filteredData.length;
+}
 
-  window.editPon = function (order) {
-    console.log(order);
-    console.log("Edit clicked", order.key);
+
+
+
+  window.editPon = function (onudata) {
+    console.log(onudata);
+    console.log("Edit clicked", onudata.key);
   Swal.fire({
     title: 'Edit PON',
     width: 500,
@@ -233,15 +270,15 @@ const db = getDatabase(app);
     <div style="text-align: left; font-size: 12px; width: 100%; display: flex; flex-direction: column; gap: 0;">
 
       <label><span style="color: red;">Customer: </span>
-                <input id="swal_customer" class="swal2-input" value="${order.customer}"  style="margin:0;">
+                <input id="swal_customer" class="swal2-input" value="${onudata.customer}"  style="margin:0;">
             </label>
       
       <label><span style="color: red;">Address: </span>
-                <input id="swal_address" class="swal2-input" value="${order.address}" style="margin:0;">
+                <input id="swal_address" class="swal2-input" value="${onudata.address}" style="margin:0;">
             </label>
 
       <label><span style="color: red;">FTTH No/IP Address: </span>
-                <input id="swal_ftthno" class="swal2-input" value="${order.ftthno || ''}" style="margin:0;">
+                <input id="swal_ftthno" class="swal2-input" value="${onudata.ftthno || ''}" style="margin:0;">
             </label>
      
       
@@ -251,9 +288,9 @@ const db = getDatabase(app);
     showCancelButton: true,
     confirmButtonText: 'Update',
     preConfirm: async () => {
-      console.log("Updating", order.key);
+      console.log("Updating", onudata.key);
 
-      const key = order.key; // locked
+      const key = onudata.key; // locked
       const customer = document.getElementById('swal_customer').value.trim();
       const address = document.getElementById('swal_address').value.trim();
       const ftthno = String(document.getElementById('swal_ftthno').value.trim());
@@ -278,7 +315,7 @@ const db = getDatabase(app);
       // };
 
 //console.log(JSON.stringify(data));
-        await update(ref(db, `dlsoltdata/${key}`), {
+        await update(ref(db, `gboltdata/${key}`), {
           customer: customer,
 	        address: address,
 	        ftthno: ftthno
@@ -312,7 +349,7 @@ window.deletePon = async function (key) {
   if (!confirm.isConfirmed) return;
 
   try {
-    await set(ref(db, `dlsoltdata/${key}`), null);
+    await set(ref(db, `gboltdata/${key}`), null);
     Swal.fire("Deleted", "PON removed", "success");
     //window.reload();
 
@@ -320,24 +357,36 @@ window.deletePon = async function (key) {
     Swal.fire("Error", err.message, "error");
   }
 };
+/* ============================= */
+/* ===== SEARCH + FILTER ===== */
+/* ============================= */
+document.getElementById("searchInput").addEventListener("keyup", function(){
+    renderTable();
+    
+});
+
+document.getElementById("ponSearchInput").addEventListener("input", function () {
+    renderTable();
+});
+
+document.getElementById("onuSearchInput").addEventListener("input", function () {
+    renderTable();
+});
 
 
-document.addEventListener("DOMContentLoaded", function () {
+/* ============================= */
+/* ===== EXPORT TO EXCEL ===== */
+/* ============================= */
+document.getElementById("exportBtn").addEventListener("click", function () {
 
-    const searchInput = document.getElementById("searchInput");
-
-    searchInput.addEventListener("keyup", function () {
-        const filter = searchInput.value.toLowerCase();
-        const rows = document.querySelectorAll("#onudata-body tr");
-
-        rows.forEach(row => {
-            const text = row.textContent.toLowerCase();
-            row.style.display = text.includes(filter) ? "" : "none";
-        });
+    $("#onudata-table").table2excel({
+        exclude: ".noExl",
+        name: "Dhaleswar OLT Report",
+        filename: "DhaleswarOLT_Report",
+        fileext: ".xls"
     });
 
 });
-
 /*=====HOME BUTTON=====*/
 document.getElementById("home-btn").addEventListener("click", function () {
 window.location.href = "alphahome.html";
