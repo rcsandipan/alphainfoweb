@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pending Provision Orders</title>
-    <script type="module" src="scrollingMessage.js"></script>
+    <title>Dhaleswar OLT</title>
+    <!-- <script type="module" src="scrollingMessage.js"></script> -->
     <!-- <link rel="stylesheet" href="homepage.css">
     <link rel="stylesheet" href="tablestyle.css"> -->
     <link rel="stylesheet" href="styles.css"> 
@@ -13,6 +13,7 @@
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     
 </head>
 <style>
@@ -72,6 +73,7 @@
           <th>Rx Power(dBm)</th>
           <th>Last Event</th>
           <th>Event Time</th>
+          <th style="width:130px;">Action</th>
 
         </tr>
       </thead>
@@ -128,35 +130,21 @@
     console.log("User authenticated:", currentuser);
   }
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-app.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-auth.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.4/firebase-database.js";
 //import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
  import { app} from "./firebase-config.js";  
 
 //const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-//const auth = getAuth(app);
-//const firestore = getFirestore(app);
-
-//   const currentuser = localStorage.getItem("currentuser");
-//   const userRole = localStorage.getItem("userpriv");
-//   const userData = userDoc.data();
-//   const userRole = userData.role || 'user';
-//   const userSection = userData.section || '';
-//   var userSection = localStorage.getItem("userSection");
-//   console.log(userSection);
-//   console.log(userRole);
-
-    document.getElementById('home-btn').onclick = () => {
-      window.location.href = "alphahome.html";
-    };
 
   const dataRef = ref(db, 'dlsoltdata');
 
   //let orders = [];
    let filteredData = [];
   onValue(dataRef, (snapshot) => {
+    filteredData = [];
     const orders = snapshot.val();
 
     //orders.push(snapshot.val());
@@ -220,13 +208,118 @@ const db = getDatabase(app);
       </td>
          
           <td>${order.eventtime || ''}</td>
+          <td style="width:130px;">
+           <button class="btn btn-info btn-xs edit-btn">Edit</button>
+            <button class="btn btn-danger btn-xs delete-btn">Delete</button>
+        </td>
         `;
+
+        row.querySelector(".edit-btn").addEventListener("click", () => editPon(order));
+      row.querySelector(".delete-btn").addEventListener("click", () => deletePon(order.key));
         tbody.appendChild(row);
          
     
 
     }
   });
+
+  window.editPon = function (order) {
+    console.log(order);
+    console.log("Edit clicked", order.key);
+  Swal.fire({
+    title: 'Edit PON',
+    width: 500,
+    html: `
+    <div style="text-align: left; font-size: 12px; width: 100%; display: flex; flex-direction: column; gap: 0;">
+
+      <label><span style="color: red;">Customer: </span>
+                <input id="swal_customer" class="swal2-input" value="${order.customer}"  style="margin:0;">
+            </label>
+      
+      <label><span style="color: red;">Address: </span>
+                <input id="swal_address" class="swal2-input" value="${order.address}" style="margin:0;">
+            </label>
+
+      <label><span style="color: red;">FTTH No/IP Address: </span>
+                <input id="swal_ftthno" class="swal2-input" value="${order.ftthno || ''}" style="margin:0;">
+            </label>
+     
+      
+      </div>
+    
+    `,
+    showCancelButton: true,
+    confirmButtonText: 'Update',
+    preConfirm: async () => {
+      console.log("Updating", order.key);
+
+      const key = order.key; // locked
+      const customer = document.getElementById('swal_customer').value.trim();
+      const address = document.getElementById('swal_address').value.trim();
+      const ftthno = String(document.getElementById('swal_ftthno').value.trim());
+      
+       if (!key) {
+        Swal.showValidationMessage('Invalid record key');
+        return false;
+      }
+
+      if (!customer) {
+        Swal.showValidationMessage('Customer Name required');
+        return false;
+      }
+
+      try {
+      //   console.log(update);
+      //   console.log(typeof update);
+      //   const data = {
+      //     customer,
+      //     address,
+      //     ftthno
+      // };
+
+//console.log(JSON.stringify(data));
+        await update(ref(db, `dlsoltdata/${key}`), {
+          customer: customer,
+	        address: address,
+	        ftthno: ftthno
+        });
+        console.log("Update finished");
+        return true;
+      } catch (err) {
+            console.error("ERROR:", err);
+            console.error("STACK:", err.stack);
+            Swal.showValidationMessage(err.message);
+      }
+    }
+  }).then((result) => {
+    if (result.isConfirmed) {
+      Swal.fire("Updated", "PON updated", "success");
+      //window.reload();
+      //loadStaffList();
+    }
+  });
+};
+
+window.deletePon = async function (key) {
+  const confirm = await Swal.fire({
+    title: 'Delete?',
+    text: `Delete PON ${key}?`,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33'
+  });
+
+  if (!confirm.isConfirmed) return;
+
+  try {
+    await set(ref(db, `dlsoltdata/${key}`), null);
+    Swal.fire("Deleted", "PON removed", "success");
+    //window.reload();
+
+  } catch (err) {
+    Swal.fire("Error", err.message, "error");
+  }
+};
 
 
 document.addEventListener("DOMContentLoaded", function () {
